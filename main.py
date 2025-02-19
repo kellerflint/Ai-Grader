@@ -1,5 +1,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+from pathlib import Path
+
 import sys
 
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QMainWindow
@@ -18,6 +20,7 @@ class MainWindow(QMainWindow):
 
 
 app = QApplication(sys.argv)
+app.setStyleSheet(Path('styles/styles.qss').read_text())
 
 window = MainWindow()
 window.show()
