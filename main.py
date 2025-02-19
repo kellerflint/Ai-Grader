@@ -9,8 +9,8 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("test app")
-        button = QPushButton("press")
+        self.setWindowTitle("Ai Grader ")
+        button = QPushButton("Upload ")
 
         self.setCentralWidget(button)
 
