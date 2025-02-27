@@ -2,7 +2,7 @@ from PyQt5 import QtCore
 
 import sys
 
-from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QMainWindow
+from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QMainWindow, QHBoxLayout
 
 from ai_client import get_ai_response
 
