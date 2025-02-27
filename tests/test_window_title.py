@@ -12,7 +12,7 @@ window.show()
 class test(unittest.TestCase):
     def test_window_title_name(self):
         self.assertEqual(window.windowTitle(), "AI Grader")
-        window.close()
+        sys.exit(app.exec_())
 
 if __name__ == "__main__":
     unittest.main()
