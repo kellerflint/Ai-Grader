@@ -1,10 +1,6 @@
-from PyQt5 import QtCore, QtGui, QtWidgets
-
-from pathlib import Path
+from PyQt5 import QtCore, QtWidgets
 
 import sys
-
-from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QMainWindow
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
