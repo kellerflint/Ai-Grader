@@ -1,5 +1,6 @@
 from main import MainWindow
 from PyQt5 import QtWidgets
+from PyQt5.QtCore import QTimer
 import sys
 
 import unittest
@@ -12,7 +13,9 @@ window.show()
 class test(unittest.TestCase):
     def test_window_title_name(self):
         self.assertEqual(window.windowTitle(), "AI Grader")
-        window.close()
+        
+        QTimer.singleShot(1000, window.close())
+
         app.exec_()
 
 if __name__ == "__main__":
