@@ -3,5 +3,5 @@ This project is for an AI to take in a csv file through a desktop application an
 Authors: Colton Matthews, Dale Kinnekeberg, Ethan Deister, Kasyn , Sage Markwardt
 
 To run this file in VSCode: 
-pip install pyqt5
+pip install pyqt5 groq
 python main.py
