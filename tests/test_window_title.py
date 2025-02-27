@@ -1,4 +1,4 @@
-from main import MainWindow
+from src.main_window import MainWindow
 from PyQt5 import QtWidgets
 import sys
 
