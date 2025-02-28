@@ -1,8 +1,10 @@
-from PyQt5 import QtCore
+from PyQt5 import QtCore, QtWidgets
+
+from pathlib import Path
 
 import sys
 
-from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QMainWindow, QHBoxLayout
+from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QMainWindow
 
 from ai_client import get_ai_response
 
@@ -18,21 +20,28 @@ class MainWindow(QMainWindow):
 
 
         #layout for widget
-        layout = QHBoxLayout()
+        layout = QtWidgets.QGridLayout()
         central_widget.setLayout(layout)
 
-
-        # align the buttons
+        # create and align the buttons
+        layout.setContentsMargins(0, 50, 0, 0)
         button = QPushButton("Upload")
-        layout.addWidget(button)
+        button.setFixedWidth(300)
+        button.setFixedHeight(50)
+        layout.addWidget(button,0, 0, 1, 1, QtCore.Qt.AlignTop)
+
         button2 = QPushButton("Submit")
-        layout.addWidget(button2)
+        button2.setFixedWidth(300)
+        button2.setFixedHeight(50)
+        layout.addWidget(button2, 0, 2, 1, 1, QtCore.Qt.AlignTop)
+
         button3 = QPushButton("Ask AI")
         button3.clicked.connect(onClickAI)
-        layout.addWidget(button3)
+        button3.setFixedWidth(300)
+        button3.setFixedHeight(50)
+        layout.addWidget(button3, 0, 3, 1, 1, QtCore.Qt.AlignTop)
 
-        layout.setAlignment(QtCore.Qt.AlignCenter)
-        self.resize(500, 300)
+        self.resize(1000, 800)
 
 def onClickAI():
     print("Clicked")
@@ -40,6 +49,7 @@ def onClickAI():
 
 app = QApplication(sys.argv)
 
+app.setStyleSheet(Path('./styles/styles.qss').read_text())
 window = MainWindow()
 window.show()
 
