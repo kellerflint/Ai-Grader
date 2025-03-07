@@ -1,5 +1,5 @@
 from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QMainWindow, QFileDialog, QMessageBox
+from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QMainWindow, QFileDialog, QMessageBox, QTextEdit
 from pathlib import Path
 import sys
 import pandas as pd
@@ -33,22 +33,28 @@ class MainWindow(QMainWindow):
         self.submit_button.setFixedWidth(300)
         self.submit_button.setFixedHeight(50)
         self.submit_button.clicked.connect(self.process_file)
-        layout.addWidget(self.submit_button, 0, 2, 1, 1, QtCore.Qt.AlignTop)
+        layout.addWidget(self.submit_button, 0, 1, 1, 1, QtCore.Qt.AlignTop)
 
         self.ask_ai_button = QPushButton("Ask AI")
         self.ask_ai_button.setFixedWidth(300)
         self.ask_ai_button.setFixedHeight(50)
         self.ask_ai_button.clicked.connect(self.onClickAI)
-        layout.addWidget(self.ask_ai_button, 0, 3, 1, 1, QtCore.Qt.AlignTop)
+        layout.addWidget(self.ask_ai_button, 0, 2, 1, 1, QtCore.Qt.AlignTop)
+
+        self.feedback_area = QTextEdit()
+        self.feedback_area.setReadOnly(True)
+        layout.addWidget(self.feedback_area, 1, 0, 1, 4)
 
         self.resize(1000, 800)
 
         # Store the file path
         self.file_path = None
-        
-    def onClickAI():
+
+    def onClickAI(self):
         print("Clicked")
-        print(get_ai_response("Question: What is 2 + 2?\n Student 1: 3\n Student 2: 4\n Student 3: Not sure"))
+        question = "Question: What is 2 + 2?\n Student 1: 3\n Student 2: 4\n Student 3: Not sure"
+        feedback = get_ai_response(question)
+        self.feedback_area.append(feedback)
 
     def upload_file(self):
         # Open a file dialog to select a CSV file
@@ -81,9 +87,6 @@ class MainWindow(QMainWindow):
         except Exception as e:
             QMessageBox.critical(self, "Error", f"An error occurred: {str(e)}")
 
-    def onClickAI(self):
-        print("Clicked")
-        print(get_ai_response("Give this sentence a score A to F looking for any mistakes: 'How doot you do?'"))
 
 
 # Run the application
