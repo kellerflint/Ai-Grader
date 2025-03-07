@@ -1,4 +1,5 @@
 import os
+import default_settings as default
 
 from groq import Groq
 
@@ -9,11 +10,12 @@ client = Groq(
 
 def get_ai_response(user_input: str):
     try:
+        print(default.PROMPT)
         chat_completion = client.chat.completions.create(
             messages=[
                 {
                     "role": "system",
-                    "content": "you are a helpful assistant."
+                    "content": default.PROMPT
                 },
                 {
                     "role": "user",

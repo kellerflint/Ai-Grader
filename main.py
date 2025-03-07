@@ -45,6 +45,10 @@ class MainWindow(QMainWindow):
 
         # Store the file path
         self.file_path = None
+        
+    def onClickAI():
+        print("Clicked")
+        print(get_ai_response("Question: What is 2 + 2?\n Student 1: 3\n Student 2: 4\n Student 3: Not sure"))
 
     def upload_file(self):
         # Open a file dialog to select a CSV file
@@ -80,6 +84,7 @@ class MainWindow(QMainWindow):
     def onClickAI(self):
         print("Clicked")
         print(get_ai_response("Give this sentence a score A to F looking for any mistakes: 'How doot you do?'"))
+
 
 # Run the application
 app = QApplication(sys.argv)
