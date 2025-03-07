@@ -1,11 +1,15 @@
 import os
 import default_settings as default
+from dotenv import load_dotenv 
+load_dotenv(dotenv_path='./config.env')
 
 from groq import Groq
 
+api_key = os.getenv("GROQ_API_KEY")
+print(api_key)
+
 client = Groq(
-    # This is the default and can be omitted
-    api_key="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"
+    api_key=api_key
 )
 
 def get_ai_response(user_input: str):
