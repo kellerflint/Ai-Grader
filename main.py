@@ -1,5 +1,5 @@
 from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QMainWindow, QFileDialog, QMessageBox, QTextEdit
+from PyQt5.QtWidgets import QApplication, QStyle, QWidget, QPushButton, QMainWindow, QFileDialog, QMessageBox, QTextEdit
 from pathlib import Path
 import sys
 import pandas as pd
@@ -45,8 +45,10 @@ class MainWindow(QMainWindow):
         self.feedback_area.setReadOnly(True)
         layout.addWidget(self.feedback_area, 1, 0, 1, 4)
 
-        self.faqButton = QPushButton('Show Question', self)
+        self.faqButton = QPushButton()
+        self.faqButton.setObjectName("faqButton")
         self.faqButton.clicked.connect(self.show_faq)
+        self.faqButton.setIcon(self.style().standardIcon(QStyle.SP_MessageBoxQuestion))
         self.faqButton.resize(self.faqButton.sizeHint())
         layout.addWidget(self.faqButton, 0, 4, 1, 1, QtCore.Qt.AlignTop)
 
@@ -98,11 +100,13 @@ class MainWindow(QMainWindow):
     def show_faq(self, event):
         msg = QMessageBox()  # 'msg' is the QMessageBox, not the faqButton
         msg.setIcon(QMessageBox.Information)
-        msg.setText("This is a message box")
-        msg.setInformativeText("This is additional information")
-        msg.setWindowTitle("MessageBox demo")
-        msg.setDetailedText("The details are as follows:")
-        msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+        msg.setText("How To Use This App:")
+        msg.setInformativeText("1. Click the upload file button. \n"
+        "2. Upload your csv, which should follow the standard Canvas\n"
+        "output format. \n"
+        "3. Click submit and your request will be sent to the AI. \n"
+        "4. Your results will then print below the buttons for your use.")
+        msg.setWindowTitle("Usage Guide")
 
         msg.buttonClicked.connect(self.msgbtn) 
 
