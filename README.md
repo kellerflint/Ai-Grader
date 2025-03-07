@@ -6,4 +6,4 @@ To run this file in VSCode:
 pip install pyqt5 groq pandas dotenv
 python main.py
 
-Create a config.env file following the guidelines within example.csv using your personal API key. 
+Create a config.env file following the guidelines within example.env using your personal API key. 
