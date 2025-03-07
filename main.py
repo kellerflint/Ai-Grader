@@ -45,6 +45,14 @@ class MainWindow(QMainWindow):
         self.feedback_area.setReadOnly(True)
         layout.addWidget(self.feedback_area, 1, 0, 1, 4)
 
+        self.faqButton = QPushButton('Show Question', self)
+        self.faqButton.clicked.connect(self.show_faq)
+        self.faqButton.resize(self.faqButton.sizeHint())
+        layout.addWidget(self.faqButton, 0, 4, 1, 1, QtCore.Qt.AlignTop)
+
+        self.setWindowTitle("QMessageBox Example")
+        self.setGeometry(100, 100, 300, 200)
+
         self.resize(1000, 800)
 
         # Store the file path
@@ -87,6 +95,22 @@ class MainWindow(QMainWindow):
         except Exception as e:
             QMessageBox.critical(self, "Error", f"An error occurred: {str(e)}")
 
+    def show_faq(self, event):
+        msg = QMessageBox()  # 'msg' is the QMessageBox, not the faqButton
+        msg.setIcon(QMessageBox.Information)
+        msg.setText("This is a message box")
+        msg.setInformativeText("This is additional information")
+        msg.setWindowTitle("MessageBox demo")
+        msg.setDetailedText("The details are as follows:")
+        msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+
+        msg.buttonClicked.connect(self.msgbtn) 
+
+        retval = msg.exec_()  # Execute the message box
+        print("value of pressed message box button:" + str(retval)) 
+
+    def msgbtn(self, btn):
+        print("Button clicked:", btn.text())
 
 
 # Run the application
