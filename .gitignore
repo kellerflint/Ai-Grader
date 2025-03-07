@@ -4,3 +4,5 @@ config.env
 .idea
 .idea/Ai-Grader.iml
 /build
+/dist
+main.spec

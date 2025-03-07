@@ -6,7 +6,7 @@ import pandas as pd
 from ai_client import get_ai_response
 import os
 
-#helps with building exe
+#bundles file pathing that allows exe to work or python command to work
 def resource_path(relative_path):
     try:
         base_path = sys._MEIPASS
@@ -18,6 +18,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
+        #allows sylesheets to be found and applied
         styles_path = resource_path('styles/styles.qss')
         app.setStyleSheet(Path(styles_path).read_text())
 
@@ -63,8 +64,6 @@ class MainWindow(QMainWindow):
         self.faqButton.resize(self.faqButton.sizeHint())
         layout.addWidget(self.faqButton, 0, 4, 1, 1, QtCore.Qt.AlignTop)
 
-        self.setWindowTitle("QMessageBox Example")
-        self.setGeometry(100, 100, 300, 200)
 
         self.resize(1000, 800)
 
