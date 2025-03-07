@@ -6,9 +6,20 @@ import pandas as pd
 from ai_client import get_ai_response
 import os
 
+#helps with building exe
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+
+        styles_path = resource_path('styles/styles.qss')
+        app.setStyleSheet(Path(styles_path).read_text())
 
         self.setWindowTitle("AI Grader")
         
@@ -120,7 +131,7 @@ class MainWindow(QMainWindow):
 # Run the application
 app = QApplication(sys.argv)
 
-app.setStyleSheet(Path('./styles/styles.qss').read_text())
+#app.setStyleSheet(Path('./styles/styles.qss').read_text())
 window = MainWindow()
 window.show()
 
