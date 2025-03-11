@@ -5,6 +5,7 @@ import sys
 import pandas as pd
 from ai_client import get_ai_response
 import os
+import functions
 
 #bundles file pathing that allows exe to work or python command to work
 def resource_path(relative_path):
@@ -93,6 +94,10 @@ class MainWindow(QMainWindow):
         try:
             # Read the CSV file
             df = pd.read_csv(self.file_path)
+
+            # Map student ids to temp ids
+            idMap = functions.createIdMap(df["id"])
+            print("Keys to student ids: " + idMap)
 
             # Process the data
             df['is_correct'] = df['response'].apply(lambda x: x.strip().lower() == "the capital of france is paris.")
