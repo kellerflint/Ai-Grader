@@ -97,7 +97,8 @@ class MainWindow(QMainWindow):
 
             # Map student ids to temp ids
             idMap = functions.createIdMap(df["id"])
-            print("Keys to student ids: " + idMap)
+            print("Keys to student ids: ")
+            print(idMap)
 
             # Process the data
             df['is_correct'] = df['response'].apply(lambda x: x.strip().lower() == "the capital of france is paris.")
