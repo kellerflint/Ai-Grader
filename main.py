@@ -105,6 +105,12 @@ class MainWindow(QMainWindow):
             print("Encoded IDs: ")
             print(df["id"])
 
+            # TEST split df
+            new_df = functions.splitDfByQuestion(df, 9)
+            print("Split df: ")
+            print(new_df)
+            print(new_df[new_df.columns[1]])
+
             # Process the data (Replace with AI)
             df['is_correct'] = df['response'].apply(lambda x: x.strip().lower() == "the capital of france is paris.")
 

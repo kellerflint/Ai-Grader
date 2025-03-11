@@ -1,3 +1,5 @@
+import re
+
 # Takes a pandas series and returns a dictionary mapping a number to each value in the array
 def createIdMap(series):
     id_mapping = {}
@@ -25,4 +27,23 @@ def useMapDecode(df, dict):
     
     new_df['id'] = new_df['id'].map(inverted_mapping)
 
+    return new_df
+
+# Return an array including all indexes with questions
+def findQuestionIndexes(df):
+    # Regex pattern to match question columns (numeric ID followed by a colon)
+    question_pattern = r"^\d+: .+"
+
+    question_column_indexes = []
+
+    # Iterate through the DataFrame columns to find the question columns
+    for index, col in enumerate(df.columns):
+        if re.match(question_pattern, col):
+            question_column_indexes.append(index)
+
+    return question_column_indexes
+
+def splitDfByQuestion(df, questionIndex):
+    answerIndex = questionIndex + 1
+    new_df = df[['id', df.columns[questionIndex], df.columns[answerIndex]]]
     return new_df
