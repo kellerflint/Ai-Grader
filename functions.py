@@ -44,6 +44,5 @@ def findQuestionIndexes(df):
     return question_column_indexes
 
 def splitDfByQuestion(df, questionIndex):
-    answerIndex = questionIndex + 1
-    new_df = df[['id', df.columns[questionIndex], df.columns[answerIndex]]]
+    new_df = df[['id', df.columns[questionIndex]]]
     return new_df
