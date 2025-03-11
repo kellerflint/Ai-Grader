@@ -100,8 +100,18 @@ class MainWindow(QMainWindow):
             print("Keys to student ids: ")
             print(idMap)
 
-            # Process the data
+            # Encode ids
+            df = functions.useMapEncode(df, idMap)
+            print("Encoded IDs: ")
+            print(df["id"])
+
+            # Process the data (Replace with AI)
             df['is_correct'] = df['response'].apply(lambda x: x.strip().lower() == "the capital of france is paris.")
+
+            # Decode ids
+            df = functions.useMapDecode(df, idMap)
+            print("Decoded IDs: ")
+            print(df["id"])
 
             # Save the processed data to a new CSV file in the same directory as the uploaded file
             output_file_path = os.path.join(os.path.dirname(self.file_path), "processed_results.csv")
