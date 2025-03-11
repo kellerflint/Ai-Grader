@@ -6,6 +6,7 @@ import pandas as pd
 from ai_client import get_ai_response
 import os
 import functions
+from io import StringIO
 
 #bundles file pathing that allows exe to work or python command to work
 def resource_path(relative_path):
@@ -97,22 +98,29 @@ class MainWindow(QMainWindow):
 
             # Map student ids to temp ids
             idMap = functions.createIdMap(df["id"])
-            print("Keys to student ids: ")
-            print(idMap)
 
             # Encode ids
             df = functions.useMapEncode(df, idMap)
-            print("Encoded IDs: ")
-            print(df["id"])
 
-            # TEST split df
+            # Split df for the first question
             new_df = functions.splitDfByQuestion(df, 9)
-            print("Split df: ")
-            print(new_df)
-            print(new_df[new_df.columns[1]])
+            # print("Split df: ")
+            # print(new_df)
+            # print(new_df[new_df.columns[1]])
+
+            csv_buffer = StringIO()
+            new_df.to_csv(csv_buffer, index=False)  # Writing to the buffer instead of a file
+
+            # Get the CSV content as a string
+            csv_string = csv_buffer.getvalue()
+
+            # new_df.to_csv
+            feedback = get_ai_response(csv_string)
+            # print(feedback)
+            self.feedback_area.append(feedback)
 
             # Process the data (Replace with AI)
-            df['is_correct'] = df['response'].apply(lambda x: x.strip().lower() == "the capital of france is paris.")
+            # df['is_correct'] = df['response'].apply(lambda x: x.strip().lower() == "the capital of france is paris.")
 
             # Decode ids
             df = functions.useMapDecode(df, idMap)

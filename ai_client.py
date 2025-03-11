@@ -23,6 +23,7 @@ client = Groq(
 def get_ai_response(user_input: str):
     try:
         print(default.PROMPT)
+        print(user_input)
         chat_completion = client.chat.completions.create(
             messages=[
                 {
