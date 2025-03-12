@@ -47,7 +47,7 @@ class MainWindow(QMainWindow):
         self.ask_ai_button = QPushButton("Submit")
         self.ask_ai_button.setFixedWidth(300)
         self.ask_ai_button.setFixedHeight(50)
-        self.ask_ai_button.clicked.connect(self.onClickAI)
+        self.ask_ai_button.clicked.connect(self.process_file)
         layout.addWidget(self.ask_ai_button, 0, 2, 1, 1, QtCore.Qt.AlignTop)
 
         self.feedback_area = QTextEdit()
@@ -89,8 +89,7 @@ class MainWindow(QMainWindow):
 
         try:
             # Read the CSV file
-            df = pd.read_csv(self.file_path)
-
+            df = pd.read_csv(self.file_path, encoding='windows-1252')
             # Map student ids to temp ids
             idMap = functions.createIdMap(df["id"])
 
