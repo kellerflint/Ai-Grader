@@ -5,6 +5,8 @@ import sys
 import pandas as pd
 from ai_client import get_ai_response
 import os
+import functions
+from io import StringIO
 
 #bundles file pathing that allows exe to work or python command to work
 def resource_path(relative_path):
@@ -94,8 +96,36 @@ class MainWindow(QMainWindow):
             # Read the CSV file
             df = pd.read_csv(self.file_path)
 
-            # Process the data
-            df['is_correct'] = df['response'].apply(lambda x: x.strip().lower() == "the capital of france is paris.")
+            # Map student ids to temp ids
+            idMap = functions.createIdMap(df["id"])
+
+            # Encode ids
+            df = functions.useMapEncode(df, idMap)
+
+            # Split df for the first question
+            new_df = functions.splitDfByQuestion(df, 9)
+            # print("Split df: ")
+            # print(new_df)
+            # print(new_df[new_df.columns[1]])
+
+            csv_buffer = StringIO()
+            new_df.to_csv(csv_buffer, index=False)  # Writing to the buffer instead of a file
+
+            # Get the CSV content as a string
+            csv_string = csv_buffer.getvalue()
+
+            # new_df.to_csv
+            feedback = get_ai_response(csv_string)
+            # print(feedback)
+            self.feedback_area.append(feedback)
+
+            # Process the data (Replace with AI)
+            # df['is_correct'] = df['response'].apply(lambda x: x.strip().lower() == "the capital of france is paris.")
+
+            # Decode ids
+            df = functions.useMapDecode(df, idMap)
+            print("Decoded IDs: ")
+            print(df["id"])
 
             # Save the processed data to a new CSV file in the same directory as the uploaded file
             output_file_path = os.path.join(os.path.dirname(self.file_path), "processed_results.csv")

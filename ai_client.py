@@ -19,10 +19,13 @@ api_key = os.getenv("GROQ_API_KEY")
 client = Groq(
     api_key=api_key
 )
+if not api_key:
+    raise ValueError("GROQ_API_KEY not found in .env file. Please add it.")
 
 def get_ai_response(user_input: str):
     try:
         print(default.PROMPT)
+        print(user_input)
         chat_completion = client.chat.completions.create(
             messages=[
                 {
