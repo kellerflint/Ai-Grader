@@ -30,6 +30,9 @@ jobs:
             -   name: Build .exe
                 run: pyinstaller --onedir --windowed --add-data "styles/styles.qss;styles" --add-data "config.env;." --add-data "default_settings.py;." main.py
 
+            -   name: List dir contents
+                run: dir
+
             -   name: Move .exe to repo root
                 run: move dist\main\main.exe .\main.exe
 
