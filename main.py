@@ -35,21 +35,16 @@ class MainWindow(QMainWindow):
         central_widget.setLayout(layout)
 
         # Create and align the buttons
-        layout.setContentsMargins(0, 50, 0, 0)
+        layout.setContentsMargins(20, 30, 20, 20)
 
         self.upload_button = QPushButton("Upload")
         self.upload_button.setFixedWidth(300)
         self.upload_button.setFixedHeight(50)
         self.upload_button.clicked.connect(self.upload_file)
         layout.addWidget(self.upload_button, 0, 0, 1, 1, QtCore.Qt.AlignTop)
+        
 
-        self.submit_button = QPushButton("Submit")
-        self.submit_button.setFixedWidth(300)
-        self.submit_button.setFixedHeight(50)
-        self.submit_button.clicked.connect(self.process_file)
-        layout.addWidget(self.submit_button, 0, 1, 1, 1, QtCore.Qt.AlignTop)
-
-        self.ask_ai_button = QPushButton("Ask AI")
+        self.ask_ai_button = QPushButton("Submit")
         self.ask_ai_button.setFixedWidth(300)
         self.ask_ai_button.setFixedHeight(50)
         self.ask_ai_button.clicked.connect(self.onClickAI)
