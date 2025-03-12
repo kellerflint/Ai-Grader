@@ -22,16 +22,13 @@ jobs:
                     python-version: '3.12'
 
             -   name: Install dependencies
-                run: |
-                pip install pyinstaller
+                run: pip install pyinstaller
 
             -   name: Build .exe
-                run: |
-                pyinstaller --onedir --windowed --add-data "styles/styles.qss;styles" --add-data "config.env;." --add-data "default_settings.py;." main.py
+                run: pyinstaller --onedir --windowed --add-data "styles/styles.qss;styles" --add-data "config.env;." --add-data "default_settings.py;." main.py
 
             -   name: Move .exe to repo root
-                run: |
-                move dist]main\main.exe .\main.exe
+                run: move dist\main\main.exe .\main.exe
 
             -   name: Upload .exe to GitHub
                 uses: actions/upload-artifact@v2
