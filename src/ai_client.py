@@ -1,19 +1,33 @@
 import os
-
+import sys
+import default_settings as default
+from dotenv import load_dotenv
 from groq import Groq
 
+#bundles file pathing that allows exe to work or python command to work
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
+load_dotenv(dotenv_path=resource_path('config.env')) #allows for exe and python main to reach config
+
+api_key = os.getenv("GROQ_API_KEY")
+
 client = Groq(
-    # This is the default and can be omitted
-    api_key="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"
+    api_key=api_key
 )
 
 def get_ai_response(user_input: str):
     try:
+        print(default.PROMPT)
         chat_completion = client.chat.completions.create(
             messages=[
                 {
                     "role": "system",
-                    "content": "you are a helpful assistant."
+                    "content": default.PROMPT
                 },
                 {
                     "role": "user",

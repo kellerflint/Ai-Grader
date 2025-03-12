@@ -1,3 +1,20 @@
 self {
     background-color: #fff;
 }
+
+QPushButton {
+  background-color: #2C882B;
+  color: white;
+  border-radius: 8px;
+  border: 1px solid #2C882B;
+  padding: 5px 15px;
+  font-size: 14pt;
+  outline: 0px;
+}
+
+#faqButton {
+  background-color: none;
+  color: black;
+  border-radius: none;
+  border: none
+}
