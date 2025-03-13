@@ -47,19 +47,22 @@ class MainWindow(QMainWindow):
         self.ask_ai_button = QPushButton("Submit")
         self.ask_ai_button.setFixedWidth(300)
         self.ask_ai_button.setFixedHeight(50)
-        self.ask_ai_button.clicked.connect(self.onClickAI)
+        self.ask_ai_button.clicked.connect(self.process_file)
         layout.addWidget(self.ask_ai_button, 0, 2, 1, 1, QtCore.Qt.AlignTop)
-
-        self.feedback_area = QTextEdit()
-        self.feedback_area.setReadOnly(True)
-        layout.addWidget(self.feedback_area, 1, 0, 1, 4)
-
+        
         self.faqButton = QPushButton()
         self.faqButton.setObjectName("faqButton")
         self.faqButton.clicked.connect(self.show_faq)
         self.faqButton.setIcon(self.style().standardIcon(QStyle.SP_MessageBoxQuestion))
         self.faqButton.resize(self.faqButton.sizeHint())
-        layout.addWidget(self.faqButton, 0, 4, 1, 1, QtCore.Qt.AlignTop)
+        layout.addWidget(self.faqButton, 0, 4, 1, 1, QtCore.Qt.AlignRight)
+
+        # AI Response Box
+        self.feedback_area = QTextEdit()
+        self.feedback_area.setReadOnly(True)
+        layout.addWidget(self.feedback_area, 1, 0, 1, 5)
+
+       
 
 
         self.resize(1000, 800)
@@ -133,7 +136,7 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, "Error", f"An error occurred: {str(e)}")
 
     def show_faq(self, event):
-        msg = QMessageBox()  # 'msg' is the QMessageBox, not the faqButton
+        msg = QMessageBox()  
         msg.setIcon(QMessageBox.Information)
         msg.setText("How To Use This App:")
         msg.setInformativeText("1. Click the upload file button. \n"
@@ -145,11 +148,11 @@ class MainWindow(QMainWindow):
 
         msg.buttonClicked.connect(self.msgbtn) 
 
-        retval = msg.exec_()  # Execute the message box
-        print("value of pressed message box button:" + str(retval)) 
+        retval = msg.exec_()
 
+    # This is required for the faq button to work correctly
     def msgbtn(self, btn):
-        print("Button clicked:", btn.text())
+        print("FAQ Exited:", btn.text())
 
 
 # Run the application
