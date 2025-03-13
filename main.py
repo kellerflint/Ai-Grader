@@ -92,8 +92,7 @@ class MainWindow(QMainWindow):
 
         try:
             # Read the CSV file
-            df = pd.read_csv(self.file_path)
-
+            df = pd.read_csv(self.file_path, encoding='windows-1252')
             # Map student ids to temp ids
             idMap = functions.createIdMap(df["id"])
 
