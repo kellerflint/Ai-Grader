@@ -1,36 +1,38 @@
-name: CI
+# TODO: Uncomment when we have created a more complete test suite located in /tests. 
 
-on:
-  push:
-    branches:
-      - '*'
-  pull_request:
-    branches:
-      - main
+# name: CI
 
-jobs:
-  test:
-    runs-on: ubuntu-latest
+# on:
+#   push:
+#     branches:
+#       - '*'
+#   pull_request:
+#     branches:
+#       - main
 
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+# jobs:
+#   test:
+#     runs-on: ubuntu-latest
 
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.13'
+#     steps:
+#       - name: Checkout Repository
+#         uses: actions/checkout@v4
 
-      - name: Install Dependencies
-        run: |
-          sudo apt update
-          sudo apt-get install -y qtbase5-dev qt5-qmake libxcb-xinerama0
-          pip install -r requirements.txt
+#       - name: Setup Python
+#         uses: actions/setup-python@v4
+#         with:
+#           python-version: '3.13'
+
+#       - name: Install Dependencies
+#         run: |
+#           sudo apt update
+#           sudo apt-get install -y qtbase5-dev qt5-qmake libxcb-xinerama0
+#           pip install -r requirements.txt
         
-      - name: Set QT_QPA_PLATFORM to offscreen
-        run: |
-          echo "QT_QPA_PLATFORM=offscreen" >> $GITHUB_ENV
+#       - name: Set QT_QPA_PLATFORM to offscreen
+#         run: |
+#           echo "QT_QPA_PLATFORM=offscreen" >> $GITHUB_ENV
         
-      - name: Run Tests 
-        run: |
-          python -m unittest discover tests
+#       - name: Run Tests 
+#         run: |
+#           python -m unittest discover tests

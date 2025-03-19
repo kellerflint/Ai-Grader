@@ -1,5 +1,5 @@
-from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtWidgets import QApplication, QStyle, QWidget, QPushButton, QMainWindow, QFileDialog, QMessageBox, QTextEdit
+from PyQt5 import QtCore
+from PyQt5.QtWidgets import QApplication, QStyle, QWidget, QPushButton, QMainWindow, QFileDialog, QMessageBox, QTextEdit, QGridLayout
 from pathlib import Path
 import sys
 import pandas as pd
@@ -29,7 +29,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(central_widget)
 
         # Layout for widget
-        layout = QtWidgets.QGridLayout()
+        layout = QGridLayout()
         central_widget.setLayout(layout)
 
         # Create and align the buttons

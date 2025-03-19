@@ -9,14 +9,6 @@ This project uses AI to process a CSV file through a desktop application and ret
 - Kasyn Tang
 - Sage Markwardt
 
-## Requirements
-
-Make sure you have the following Python packages installed:
-
-```bash
-pip install pyqt5 groq pandas python-dotenv
-```
-
 ## Running the Application
 
 To run the application in VSCode:
@@ -24,7 +16,7 @@ To run the application in VSCode:
 Install the necessary dependencies:
 
 ```bash
-pip install pyqt5 groq pandas python-dotenv
+pip install -r requirements.txt
 ```
 
 Run the application:
@@ -60,3 +52,15 @@ Issues with pyinstaller can potentially be fixed by using the following command 
 ```bash
 Python -m PyInstaller --onedir --windowed --add-data "styles/styles.qss;styles" --add-data "config.env;." --add-data "default_settings.py;." main.py
 ```
+
+
+## Using the .exe artifact
+
+If you would rather produce and download the .exe as an artifact of GitHub Actions, you must follow these steps:
+
+1. Create a fork of the GitHub repo
+2. Go to the fork's settings
+3. On the left sidebar: Security > Secrets and Variables > Actions
+4. Create a new environment if you haven't already
+5. Add a new seret named GROQ_API_KEY
+6. Make a commit to trigger the CI/CD pipeline
