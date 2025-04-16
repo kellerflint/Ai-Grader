@@ -11,6 +11,7 @@ from ai_client import get_ai_response
 import os
 import functions
 from io import StringIO
+import qtawesome as qta
 
 #bundles file pathing that allows exe to work or python command to work
 def resource_path(relative_path):
@@ -74,7 +75,10 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.feedback_area, 1, 0, 1, 5)
 
         # Text Copy Box
-        self.copyButton = QPushButton("Copy Text")
+        self.copyButton = QPushButton("", self.feedback_area)
+        self.copyButton.setObjectName("copyButton")
+        self.copyButton.setIcon(qta.icon('fa5s.copy'))
+        self.copyButton.move(self.feedback_area.width() - 70, 5)
         self.copyButton.clicked.connect(self.copy_text)
         layout.addWidget(self.copyButton)
 
