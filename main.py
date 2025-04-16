@@ -3,6 +3,7 @@ from tkinter.simpledialog import SimpleDialog
 from PyQt5 import QtCore, QtWidgets
 # noinspection LongLine
 from PyQt5.QtWidgets import QApplication, QStyle, QWidget, QPushButton, QMainWindow, QFileDialog, QMessageBox, QTextEdit, QDialog
+from PyQt5.QtGui import QClipboard
 from pathlib import Path
 import sys
 import pandas as pd
@@ -60,7 +61,7 @@ class MainWindow(QMainWindow):
         self.faqButton.resize(self.faqButton.sizeHint())
         layout.addWidget(self.faqButton, 0, 4, 1, 1, QtCore.Qt.AlignRight)
 
-        # settings menu
+        # Settings Menu
         self.settingsButton = QPushButton()
         self.settingsButton.setObjectName("settingsButton")
         self.settingsButton.setText("Settings")
@@ -72,8 +73,10 @@ class MainWindow(QMainWindow):
         self.feedback_area.setReadOnly(True)
         layout.addWidget(self.feedback_area, 1, 0, 1, 5)
 
-       
-
+        # Text Copy Box
+        self.copyButton = QPushButton("Copy Text")
+        self.copyButton.clicked.connect(self.copy_text)
+        layout.addWidget(self.copyButton)
 
         self.resize(1000, 800)
 
@@ -85,6 +88,12 @@ class MainWindow(QMainWindow):
         question = "Question: What is 2 + 2?\n Student 1: 3\n Student 2: 4\n Student 3: Not sure"
         feedback = get_ai_response(question)
         self.feedback_area.append(feedback)
+
+    def copy_text(self):
+        text_to_copy = self.feedback_area.toPlainText()
+        clipboard = QApplication.clipboard()
+        clipboard.setText(text_to_copy)
+        print(f"Copied to clipboard: {text_to_copy}")
 
     def upload_file(self):
         # Open a file dialog to select a CSV file
