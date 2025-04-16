@@ -2,8 +2,9 @@ from tkinter.simpledialog import SimpleDialog
 
 from PyQt5 import QtCore, QtWidgets
 # noinspection LongLine
-from PyQt5.QtWidgets import QApplication, QStyle, QWidget, QPushButton, QMainWindow, QFileDialog, QMessageBox, QTextEdit, QDialog
+from PyQt5.QtWidgets import QApplication, QStyle, QWidget, QToolButton, QPushButton, QMainWindow, QFileDialog, QMessageBox, QTextEdit, QDialog
 from PyQt5.QtGui import QClipboard
+from PyQt5.QtCore import QTimer
 from pathlib import Path
 import sys
 import pandas as pd
@@ -75,29 +76,36 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.feedback_area, 1, 0, 1, 5)
 
         # Text Copy Box
-        self.copyButton = QPushButton("", self.feedback_area)
+        self.copyButton = QToolButton(self.feedback_area.viewport())
         self.copyButton.setObjectName("copyButton")
         self.copyButton.setIcon(qta.icon('fa5s.copy'))
-        self.copyButton.move(self.feedback_area.width() - 70, 5)
+        self.original_resize_event = self.feedback_area.resizeEvent
+        self.feedback_area.resizeEvent = self.new_resize_event
         self.copyButton.clicked.connect(self.copy_text)
-        layout.addWidget(self.copyButton)
+        QTimer.singleShot(0, self.reposition_copy_button)
 
         self.resize(1000, 800)
 
         # Store the file path
         self.file_path = None
 
-    def onClickAI(self):
-        print("Clicked")
-        question = "Question: What is 2 + 2?\n Student 1: 3\n Student 2: 4\n Student 3: Not sure"
-        feedback = get_ai_response(question)
-        self.feedback_area.append(feedback)
-
     def copy_text(self):
+        # column_data = self.df['Grade'].toList()
+        # text_to_copy = "\n".join(map(str, column_data))
         text_to_copy = self.feedback_area.toPlainText()
         clipboard = QApplication.clipboard()
         clipboard.setText(text_to_copy)
         print(f"Copied to clipboard: {text_to_copy}")
+
+    def reposition_copy_button(self, event=None):
+        margin = 10 
+        x = self.feedback_area.width() - self.copyButton.width() - margin
+        y = margin
+        self.copyButton.move(x, y)
+
+    def new_resize_event(self, event):
+        self.original_resize_event(event)
+        self.reposition_copy_button(event)
 
     def upload_file(self):
         # Open a file dialog to select a CSV file
@@ -146,6 +154,9 @@ class MainWindow(QMainWindow):
             df = functions.useMapDecode(df, idMap)
             print("Decoded IDs: ")
             print(df["id"])
+
+            # Save the dataframe to our app for click to copy capabilities
+            self.df = df
 
             # Save the processed data to a new CSV file in the same directory as the uploaded file
             output_file_path = os.path.join(os.path.dirname(self.file_path), "processed_results.csv")
