@@ -1,5 +1,8 @@
+from tkinter.simpledialog import SimpleDialog
+
 from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtWidgets import QApplication, QStyle, QWidget, QPushButton, QMainWindow, QFileDialog, QMessageBox, QTextEdit
+# noinspection LongLine
+from PyQt5.QtWidgets import QApplication, QStyle, QWidget, QPushButton, QMainWindow, QFileDialog, QMessageBox, QTextEdit, QDialog
 from pathlib import Path
 import sys
 import pandas as pd
@@ -56,6 +59,13 @@ class MainWindow(QMainWindow):
         self.faqButton.setIcon(self.style().standardIcon(QStyle.SP_MessageBoxQuestion))
         self.faqButton.resize(self.faqButton.sizeHint())
         layout.addWidget(self.faqButton, 0, 4, 1, 1, QtCore.Qt.AlignRight)
+
+        # settings menu
+        self.settingsButton = QPushButton()
+        self.settingsButton.setObjectName("settingsButton")
+        self.settingsButton.setText("Settings")
+        self.settingsButton.clicked.connect(self.open_settings_dialog)
+        layout.addWidget(self.settingsButton, 0, 3, 1, 1, QtCore.Qt.AlignRight)
 
         # AI Response Box
         self.feedback_area = QTextEdit()
@@ -153,6 +163,19 @@ class MainWindow(QMainWindow):
     def msgbtn(self, btn):
         print("FAQ Exited:", btn.text())
 
+
+    def open_settings_dialog(self):
+        dialog = SettingsDialog(self)
+        dialog.exec_()
+
+        print("click")
+
+
+
+class SettingsDialog(QDialog):
+    def __init__(self, parent = None):
+        super().__init__(parent)
+        self.setWindowTitle("Settings")
 
 # Run the application
 app = QApplication(sys.argv)
