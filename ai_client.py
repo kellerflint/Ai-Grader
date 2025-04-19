@@ -3,6 +3,7 @@ import sys
 import default_settings as default
 from dotenv import load_dotenv
 from groq import Groq
+from api_key_functions import get_api_key
 
 #bundles file pathing that allows exe to work or python command to work
 def resource_path(relative_path):
@@ -12,15 +13,17 @@ def resource_path(relative_path):
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
 
-load_dotenv(dotenv_path=resource_path('config.env')) #allows for exe and python main to reach config
+# TODO: Remove if config.env already works
+#load_dotenv(dotenv_path=resource_path('config.env')) #allows for exe and python main to reach config
+#api_key = os.getenv("API_KEY")
 
-api_key = os.getenv("GROQ_API_KEY")
+api_key = get_api_key()
 
 client = Groq(
     api_key=api_key
 )
 if not api_key:
-    raise ValueError("GROQ_API_KEY not found in .env file. Please add it.")
+    raise ValueError("API_KEY not found in .env file. Please add it.")
 
 def get_ai_response(user_input: str):
     try:
@@ -41,4 +44,4 @@ def get_ai_response(user_input: str):
         )
         return chat_completion.choices[0].message.content
     except:
-        return "Error"
+        return "Error: No response. Check Settings to update your API key"
