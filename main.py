@@ -1,8 +1,5 @@
-from tkinter.simpledialog import SimpleDialog
-
 from PyQt5 import QtCore, QtWidgets
-# noinspection LongLine
-from PyQt5.QtWidgets import QApplication, QStyle, QWidget, QPushButton, QMainWindow, QFileDialog, QMessageBox, QTextEdit, QDialog
+from PyQt5.QtWidgets import QApplication, QStyle, QWidget, QPushButton, QMainWindow, QFileDialog, QMessageBox, QTextEdit
 from pathlib import Path
 import sys
 import pandas as pd
@@ -38,41 +35,36 @@ class MainWindow(QMainWindow):
         central_widget.setLayout(layout)
 
         # Create and align the buttons
-        layout.setContentsMargins(20, 30, 20, 20)
+        layout.setContentsMargins(0, 50, 0, 0)
 
         self.upload_button = QPushButton("Upload")
         self.upload_button.setFixedWidth(300)
         self.upload_button.setFixedHeight(50)
         self.upload_button.clicked.connect(self.upload_file)
         layout.addWidget(self.upload_button, 0, 0, 1, 1, QtCore.Qt.AlignTop)
-        
 
-        self.ask_ai_button = QPushButton("Submit")
+        self.submit_button = QPushButton("Submit")
+        self.submit_button.setFixedWidth(300)
+        self.submit_button.setFixedHeight(50)
+        self.submit_button.clicked.connect(self.process_file)
+        layout.addWidget(self.submit_button, 0, 1, 1, 1, QtCore.Qt.AlignTop)
+
+        self.ask_ai_button = QPushButton("Ask AI")
         self.ask_ai_button.setFixedWidth(300)
         self.ask_ai_button.setFixedHeight(50)
-        self.ask_ai_button.clicked.connect(self.process_file)
+        self.ask_ai_button.clicked.connect(self.onClickAI)
         layout.addWidget(self.ask_ai_button, 0, 2, 1, 1, QtCore.Qt.AlignTop)
-        
+
+        self.feedback_area = QTextEdit()
+        self.feedback_area.setReadOnly(True)
+        layout.addWidget(self.feedback_area, 1, 0, 1, 4)
+
         self.faqButton = QPushButton()
         self.faqButton.setObjectName("faqButton")
         self.faqButton.clicked.connect(self.show_faq)
         self.faqButton.setIcon(self.style().standardIcon(QStyle.SP_MessageBoxQuestion))
         self.faqButton.resize(self.faqButton.sizeHint())
-        layout.addWidget(self.faqButton, 0, 4, 1, 1, QtCore.Qt.AlignRight)
-
-        # settings menu
-        self.settingsButton = QPushButton()
-        self.settingsButton.setObjectName("settingsButton")
-        self.settingsButton.setText("Settings")
-        self.settingsButton.clicked.connect(self.open_settings_dialog)
-        layout.addWidget(self.settingsButton, 0, 3, 1, 1, QtCore.Qt.AlignRight)
-
-        # AI Response Box
-        self.feedback_area = QTextEdit()
-        self.feedback_area.setReadOnly(True)
-        layout.addWidget(self.feedback_area, 1, 0, 1, 5)
-
-       
+        layout.addWidget(self.faqButton, 0, 4, 1, 1, QtCore.Qt.AlignTop)
 
 
         self.resize(1000, 800)
@@ -101,51 +93,46 @@ class MainWindow(QMainWindow):
             return
 
         try:
-            # Read the CSV file
-            df = pd.read_csv(self.file_path, encoding='windows-1252')
+             # Read the CSV file
+            df = pd.read_csv(self.file_path)
+
             # Map student ids to temp ids
             idMap = functions.createIdMap(df["id"])
-
-            # Encode ids
             df = functions.useMapEncode(df, idMap)
 
-            # Split df for the first question
-            new_df = functions.splitDfByQuestion(df, 9)
-            # print("Split df: ")
-            # print(new_df)
-            # print(new_df[new_df.columns[1]])
+            # Get all question columns
+            question_indexes = functions.findQuestionIndexes(df)
+            
+            # Process each question
+            for q_idx in question_indexes:
+                # Get single question df
+                question_df = functions.splitDfByQuestion(df, q_idx)
+                
+                # Get AI feedback
+                csv_buffer = StringIO()
+                question_df.to_csv(csv_buffer, index=False)
+                feedback = get_ai_response(csv_buffer.getvalue())
+                # Get the CSV content as a string
+                csv_string = csv_buffer.getvalue()
 
-            csv_buffer = StringIO()
-            new_df.to_csv(csv_buffer, index=False)  # Writing to the buffer instead of a file
+                # new_df.to_csv
+                feedback = get_ai_response(csv_string)
+            
+                self.feedback_area.append(feedback)
 
-            # Get the CSV content as a string
-            csv_string = csv_buffer.getvalue()
 
-            # new_df.to_csv
-            feedback = get_ai_response(csv_string)
-            # print(feedback)
-            self.feedback_area.append(feedback)
-
-            # Process the data (Replace with AI)
-            # df['is_correct'] = df['response'].apply(lambda x: x.strip().lower() == "the capital of france is paris.")
-
-            # Decode ids
+            # Decode ids and save original df
             df = functions.useMapDecode(df, idMap)
-            print("Decoded IDs: ")
-            print(df["id"])
-
-            # Save the processed data to a new CSV file in the same directory as the uploaded file
-            output_file_path = os.path.join(os.path.dirname(self.file_path), "processed_results.csv")
-            df.to_csv(output_file_path, index=False)
-
-            # Notify the user that the file has been saved
-            QMessageBox.information(self, "File Saved", f"Processed file saved successfully: {output_file_path}")
+            output_path = os.path.join(os.path.dirname(self.file_path), "processed_results.csv")
+            df.to_csv(output_path, index=False)
+            
+            QMessageBox.information(self, "Complete", f"Evaluated {len(question_indexes)} questions\nResults saved to: {output_path}")
 
         except Exception as e:
             QMessageBox.critical(self, "Error", f"An error occurred: {str(e)}")
 
     def show_faq(self, event):
-        msg = QMessageBox()  
+        msg = QMessageBox()  # 'msg' is the QMessageBox, not the faqButton
         msg.setIcon(QMessageBox.Information)
         msg.setText("How To Use This App:")
         msg.setInformativeText("1. Click the upload file button. \n"
@@ -157,25 +144,12 @@ class MainWindow(QMainWindow):
 
         msg.buttonClicked.connect(self.msgbtn) 
 
-        retval = msg.exec_()
+        retval = msg.exec_()  # Execute the message box
+        print("value of pressed message box button:" + str(retval)) 
 
-    # This is required for the faq button to work correctly
     def msgbtn(self, btn):
-        print("FAQ Exited:", btn.text())
+        print("Button clicked:", btn.text())
 
-
-    def open_settings_dialog(self):
-        dialog = SettingsDialog(self)
-        dialog.exec_()
-
-        print("click")
-
-
-
-class SettingsDialog(QDialog):
-    def __init__(self, parent = None):
-        super().__init__(parent)
-        self.setWindowTitle("Settings")
 
 # Run the application
 app = QApplication(sys.argv)
