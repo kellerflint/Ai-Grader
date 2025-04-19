@@ -13,22 +13,20 @@ def resource_path(relative_path):
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
 
-# TODO: Remove if config.env already works
-#load_dotenv(dotenv_path=resource_path('config.env')) #allows for exe and python main to reach config
-#api_key = os.getenv("API_KEY")
-
-api_key = get_api_key()
-
-client = Groq(
-    api_key=api_key
-)
-if not api_key:
-    raise ValueError("API_KEY not found in .env file. Please add it.")
+# Returns an ai client object
+def ai_client():
+    api_key=get_api_key()
+    client = Groq(api_key=api_key)
+    if not api_key:
+        raise ValueError("API_KEY not found in .env file. Please add it.")
+    return client
 
 def get_ai_response(user_input: str):
+    client = ai_client()
+    print(client)
     try:
-        print(default.PROMPT)
-        print(user_input)
+        #print(default.PROMPT)
+        #print(user_input)
         chat_completion = client.chat.completions.create(
             messages=[
                 {

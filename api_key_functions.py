@@ -5,7 +5,7 @@ ENV_FILE = "config.env"
 
 # Load variables from the .env file
 def load_api_key():
-    load_dotenv(ENV_FILE)
+    load_dotenv(ENV_FILE, override=True) #override prevents caching
     return os.getenv("API_KEY")
 
 # Overwrite or create .env file with the key
