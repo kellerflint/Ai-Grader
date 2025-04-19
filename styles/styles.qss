@@ -11,3 +11,10 @@ QPushButton {
   font-size: 14pt;
   outline: 0px;
 }
+
+#faqButton {
+  background-color: none;
+  color: black;
+  border-radius: none;
+  border: none
+}
