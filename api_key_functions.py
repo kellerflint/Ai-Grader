@@ -1,11 +1,20 @@
 import os
+import sys
 from dotenv import load_dotenv
 
 ENV_FILE = "config.env"
 
+#bundles file pathing that allows exe to work or python command to work
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
 # Load variables from the .env file
 def load_api_key():
-    load_dotenv(ENV_FILE, override=True) #override prevents caching
+    load_dotenv(dotenv_path=resource_path(ENV_FILE), override=True) #override prevents caching
     return os.getenv("API_KEY")
 
 # Overwrite or create .env file with the key

@@ -1,17 +1,7 @@
-import os
-import sys
 import default_settings as default
 from dotenv import load_dotenv
 from groq import Groq
 from api_key_functions import get_api_key
-
-#bundles file pathing that allows exe to work or python command to work
-def resource_path(relative_path):
-    try:
-        base_path = sys._MEIPASS
-    except Exception:
-        base_path = os.path.abspath(".")
-    return os.path.join(base_path, relative_path)
 
 # Returns an ai client object
 def ai_client():
