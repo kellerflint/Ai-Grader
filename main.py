@@ -2,11 +2,12 @@ from tkinter.simpledialog import SimpleDialog
 
 from PyQt5 import QtCore, QtWidgets
 # noinspection LongLine
-from PyQt5.QtWidgets import QApplication, QStyle, QWidget, QPushButton, QMainWindow, QFileDialog, QMessageBox, QTextEdit, QDialog
+from PyQt5.QtWidgets import QApplication, QStyle, QWidget, QPushButton, QMainWindow, QFileDialog, QMessageBox, QTextEdit, QDialog, QLabel, QLineEdit
 from pathlib import Path
 import sys
 import pandas as pd
 from ai_client import get_ai_response
+from api_key_functions import load_api_key, save_api_key
 import os
 import functions
 from io import StringIO
@@ -176,6 +177,37 @@ class SettingsDialog(QDialog):
     def __init__(self, parent = None):
         super().__init__(parent)
         self.setWindowTitle("Settings")
+
+        # Layout for widget
+        layout = QtWidgets.QGridLayout()
+        self.setLayout(layout)
+
+        # Create and align the buttons
+        #layout.setContentsMargins(20, 30, 20, 20)
+
+        # Current API Key display
+        self.current_key_label = QLabel(f"Current API Key: {load_api_key() or 'Not set'}")
+        layout.addWidget(self.current_key_label)
+
+        # Input field for new API key
+        self.input_field = QLineEdit()
+        self.input_field.setPlaceholderText("Enter new API key")
+        layout.addWidget(self.input_field)
+
+        # Save button
+        save_button = QPushButton("Save API Key")
+        save_button.clicked.connect(self.save_new_api_key)
+        layout.addWidget(save_button)
+
+    def save_new_api_key(self):
+        new_key = self.input_field.text().strip()
+        if not new_key:
+            QMessageBox.warning(self, "Invalid Input", "API key cannot be empty.")
+            return
+        save_api_key(new_key)
+        QMessageBox.information(self, "Success", "API key updated.")
+        self.current_key_label.setText(f"Current API Key: {new_key}")
+        self.input_field.clear()
 
 # Run the application
 app = QApplication(sys.argv)
