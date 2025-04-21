@@ -14,7 +14,7 @@ This project uses AI to process a CSV file through a desktop application and ret
 Make sure you have the following Python packages installed:
 
 ```bash
-pip install pyqt5 groq pandas python-dotenv
+pip install pyqt5 groq pandas python-dotenv QtAwesome
 ```
 
 ## Running the Application
