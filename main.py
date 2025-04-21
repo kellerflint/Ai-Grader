@@ -1,10 +1,9 @@
 from tkinter.simpledialog import SimpleDialog
 
-from PyQt5 import QtCore, QtWidgets
 # noinspection LongLine
-from PyQt5.QtWidgets import QApplication, QStyle, QWidget, QToolButton, QPushButton, QMainWindow, QFileDialog, QMessageBox, QTextEdit, QDialog
+from PyQt5.QtWidgets import QApplication, QStyle, QWidget, QGridLayout, QToolButton, QPushButton, QMainWindow, QFileDialog, QMessageBox, QTextEdit, QDialog
 from PyQt5.QtGui import QClipboard
-from PyQt5.QtCore import QTimer
+from PyQt5.QtCore import QTimer, Qt
 from pathlib import Path
 import sys
 import pandas as pd
@@ -37,7 +36,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(central_widget)
 
         # Layout for widget
-        layout = QtWidgets.QGridLayout()
+        layout = QGridLayout()
         central_widget.setLayout(layout)
 
         # Create and align the buttons
@@ -47,28 +46,28 @@ class MainWindow(QMainWindow):
         self.upload_button.setFixedWidth(300)
         self.upload_button.setFixedHeight(50)
         self.upload_button.clicked.connect(self.upload_file)
-        layout.addWidget(self.upload_button, 0, 0, 1, 1, QtCore.Qt.AlignTop)
+        layout.addWidget(self.upload_button, 0, 0, 1, 1, Qt.AlignTop)
         
 
         self.ask_ai_button = QPushButton("Submit")
         self.ask_ai_button.setFixedWidth(300)
         self.ask_ai_button.setFixedHeight(50)
         self.ask_ai_button.clicked.connect(self.process_file)
-        layout.addWidget(self.ask_ai_button, 0, 2, 1, 1, QtCore.Qt.AlignTop)
+        layout.addWidget(self.ask_ai_button, 0, 2, 1, 1, Qt.AlignTop)
         
         self.faqButton = QPushButton()
         self.faqButton.setObjectName("faqButton")
         self.faqButton.clicked.connect(self.show_faq)
         self.faqButton.setIcon(self.style().standardIcon(QStyle.SP_MessageBoxQuestion))
         self.faqButton.resize(self.faqButton.sizeHint())
-        layout.addWidget(self.faqButton, 0, 4, 1, 1, QtCore.Qt.AlignRight)
+        layout.addWidget(self.faqButton, 0, 4, 1, 1, Qt.AlignRight)
 
         # Settings Menu
         self.settingsButton = QPushButton()
         self.settingsButton.setObjectName("settingsButton")
         self.settingsButton.setText("Settings")
         self.settingsButton.clicked.connect(self.open_settings_dialog)
-        layout.addWidget(self.settingsButton, 0, 3, 1, 1, QtCore.Qt.AlignRight)
+        layout.addWidget(self.settingsButton, 0, 3, 1, 1, Qt.AlignRight)
 
         # AI Response Box
         self.feedback_area = QTextEdit()
@@ -98,7 +97,7 @@ class MainWindow(QMainWindow):
         print(f"Copied to clipboard: {text_to_copy}")
 
     def reposition_copy_button(self, event=None):
-        margin = 10 
+        margin = 25 
         x = self.feedback_area.width() - self.copyButton.width() - margin
         y = margin
         self.copyButton.move(x, y)
