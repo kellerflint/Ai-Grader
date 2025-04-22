@@ -1,7 +1,7 @@
 from tkinter.simpledialog import SimpleDialog
 
 # noinspection LongLine
-from PyQt5.QtWidgets import QApplication, QStyle, QWidget, QGridLayout, QToolButton, QPushButton, QMainWindow, QFileDialog, QMessageBox, QTextEdit, QDialog
+from PyQt5.QtWidgets import QApplication, QStyle, QWidget, QGridLayout, QToolButton, QPushButton, QMainWindow, QFileDialog, QMessageBox, QTextEdit, QDialog, QLabel, QLineEdit
 from PyQt5.QtGui import QClipboard
 from PyQt5.QtCore import QTimer, Qt
 from pathlib import Path
@@ -202,7 +202,7 @@ class SettingsDialog(QDialog):
         self.setWindowTitle("Settings")
 
         # Layout for widget
-        layout = QtWidgets.QGridLayout()
+        layout = QGridLayout()
         self.setLayout(layout)
 
         # Create and align the buttons
