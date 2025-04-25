@@ -1,4 +1,5 @@
-from PyQt5.QtWidgets import QApplication, QStyle, QWidget, QGridLayout, QToolButton, QPushButton, QMainWindow, QFileDialog, QMessageBox, QTextEdit, QLabel, QLineEdit, QDialog
+from PyQt5.QtWidgets import QApplication, QStyle, QWidget, QGridLayout, QToolButton, QPushButton, QMainWindow, \
+    QFileDialog, QMessageBox, QTextEdit, QLabel, QLineEdit, QDialog, QHBoxLayout
 from PyQt5.QtGui import QClipboard
 from PyQt5.QtCore import QTimer, Qt
 from pathlib import Path
@@ -58,14 +59,20 @@ class MainWindow(QMainWindow):
         self.faqButton.clicked.connect(self.show_faq)
         self.faqButton.setIcon(self.style().standardIcon(QStyle.SP_MessageBoxQuestion))
         self.faqButton.resize(self.faqButton.sizeHint())
-        layout.addWidget(self.faqButton, 0, 4, 1, 1, Qt.AlignRight)
+        # layout.addWidget(self.faqButton, 0, 4, 1, 1, Qt.AlignRight)
 
         # Settings Menu
         self.settingsButton = QPushButton()
         self.settingsButton.setObjectName("settingsButton")
-        self.settingsButton.setText("Settings")
+        self.settingsButton.setIcon(qta.icon('mdi.cog'))
         self.settingsButton.clicked.connect(self.open_settings_dialog)
-        layout.addWidget(self.settingsButton, 0, 3, 1, 1, Qt.AlignRight)
+        # layout.addWidget(self.settingsButton, 0, 3, 1, 1, Qt.AlignRight)
+
+        right_hbox = QHBoxLayout()
+        right_hbox.setContentsMargins(0, 0, 0, 0)
+        right_hbox.addWidget(self.settingsButton)
+        right_hbox.addWidget(self.faqButton)
+        layout.addLayout(right_hbox, 0,3,1,2, Qt.AlignRight)
 
         # AI Response Box
         self.feedback_area = QTextEdit()

@@ -12,7 +12,7 @@ QPushButton {
   outline: 0px;
 }
 
-#faqButton, #copyButton {
+#faqButton, #copyButton, #settingsButton {
   background-color: none;
   color: black;
   border-radius: none;
