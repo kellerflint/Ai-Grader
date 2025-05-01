@@ -1,7 +1,7 @@
-from PyQt5.QtWidgets import QApplication, QStyle, QWidget, QGridLayout, QToolButton, QPushButton, QMainWindow, \
-    QFileDialog, QMessageBox, QTextEdit, QLabel, QLineEdit, QDialog, QHBoxLayout
+from PyQt5.QtWidgets import QApplication, QStyle, QWidget, QGridLayout, QToolButton, QScrollArea, QPushButton, QMainWindow, \
+    QFileDialog, QMessageBox, QTextEdit, QLabel, QLineEdit, QDialog, QHBoxLayout, QVBoxLayout
 from PyQt5.QtGui import QClipboard
-from PyQt5.QtCore import QTimer, Qt
+from PyQt5.QtCore import Qt
 from pathlib import Path
 import sys
 import pandas as pd
@@ -47,13 +47,14 @@ class MainWindow(QMainWindow):
         self.upload_button.clicked.connect(self.upload_file)
         layout.addWidget(self.upload_button, 0, 0, 1, 1, Qt.AlignTop)
         
-
-        self.ask_ai_button = QPushButton("Ask AI")
+        # submit button
+        self.ask_ai_button = QPushButton("Submit")
         self.ask_ai_button.setFixedWidth(300)
         self.ask_ai_button.setFixedHeight(50)
         self.ask_ai_button.clicked.connect(self.process_file)
         layout.addWidget(self.ask_ai_button, 0, 2, 1, 1, Qt.AlignTop)
         
+        # faq button
         self.faqButton = QPushButton()
         self.faqButton.setObjectName("faqButton")
         self.faqButton.clicked.connect(self.show_faq)
@@ -68,48 +69,79 @@ class MainWindow(QMainWindow):
         self.settingsButton.clicked.connect(self.open_settings_dialog)
         # layout.addWidget(self.settingsButton, 0, 3, 1, 1, Qt.AlignRight)
 
+        # settings button
         right_hbox = QHBoxLayout()
         right_hbox.setContentsMargins(0, 0, 0, 0)
         right_hbox.addWidget(self.settingsButton)
         right_hbox.addWidget(self.faqButton)
         layout.addLayout(right_hbox, 0,3,1,2, Qt.AlignRight)
 
-        # AI Response Box
-        self.feedback_area = QTextEdit()
-        self.feedback_area.setReadOnly(True)
-        layout.addWidget(self.feedback_area, 1, 0, 1, 5)
-
-        # Text Copy Box
-        self.copyButton = QToolButton(self.feedback_area.viewport())
-        self.copyButton.setObjectName("copyButton")
-        self.copyButton.setIcon(qta.icon('fa5s.copy'))
-        self.original_resize_event = self.feedback_area.resizeEvent
-        self.feedback_area.resizeEvent = self.new_resize_event
-        self.copyButton.clicked.connect(self.copy_text)
-        QTimer.singleShot(0, self.reposition_copy_button)
+        # place for feedback
+        self.feedback_area = QScrollArea()
+        self.feedback_area.setWidgetResizable(True)
+        self.content = QWidget()
+        self.scroll_layout = QVBoxLayout(self.content)
+        self.feedback_area.setWidget(self.content)
+        layout.addWidget(self.feedback_area, 2, 0, 1, 5) 
 
         self.resize(1000, 800)
 
         # Store the file path
         self.file_path = None
 
-    def copy_text(self):
-        # column_data = self.df['Grade'].toList()
-        # text_to_copy = "\n".join(map(str, column_data))
-        text_to_copy = self.feedback_area.toPlainText()
+    def display_students(self):
+        # Clear previous buttons if refreshing
+        for i in reversed(range(self.scroll_layout.count())):
+            widget_to_remove = self.scroll_layout.itemAt(i).widget()
+            if widget_to_remove:
+                widget_to_remove.setParent(None)
+
+        # check if there is a dataframe to pull from
+        if not hasattr(self, 'structured_df') or self.structured_df is None:
+            return
+
+        # Group feedback by student name
+        grouped = self.structured_df.groupby("Student Name")["Feedback"].apply(lambda x: "\n\n".join(x)).reset_index()
+
+        # for each student's data, arrange the box to show
+        for idx, row in grouped.iterrows():
+            student_name = row["Student Name"]
+            feedback = row["Feedback"]
+
+            # Create a container widget to hold responses
+            container = QWidget()
+            h_layout = QHBoxLayout(container)
+
+            # force student name to be a string and prevent errors
+            label = QLabel(str(student_name))
+            label.setFixedWidth(150)
+
+            # display the feedback
+            text_edit = QTextEdit()
+            text_edit.setPlainText(feedback)
+            text_edit.setReadOnly(True)
+            text_edit.setMinimumHeight(100)
+
+            # add the copy button for each student feedback
+            copy_button = QToolButton()
+            copy_button.setObjectName("copyButton")
+            copy_button.setIcon(qta.icon('fa5s.copy'))
+            copy_button.setText("Copy")
+            copy_button.setToolTip(f"Copy feedback for {student_name}")
+            copy_button.clicked.connect(lambda _, text=feedback: self.copy_specific_feedback(text))
+
+            # Add widgets to the layout
+            h_layout.addWidget(label)
+            h_layout.addWidget(text_edit)
+            h_layout.addWidget(copy_button)
+
+            # add container with all the data
+            self.scroll_layout.addWidget(container)
+
+    def copy_specific_feedback(self, feedback_text):
         clipboard = QApplication.clipboard()
-        clipboard.setText(text_to_copy)
-        print(f"Copied to clipboard: {text_to_copy}")
-
-    def reposition_copy_button(self, event=None):
-        margin = 25 
-        x = self.feedback_area.width() - self.copyButton.width() - margin
-        y = margin
-        self.copyButton.move(x, y)
-
-    def new_resize_event(self, event):
-        self.original_resize_event(event)
-        self.reposition_copy_button(event)
+        clipboard.setText(feedback_text)
+        print(f"Copied feedback: {feedback_text}")
 
     def upload_file(self):
         # Open a file dialog to select a CSV file
@@ -149,8 +181,7 @@ class MainWindow(QMainWindow):
 
                 # new_df.to_csv
                 feedback = get_ai_response(csv_string)
-            
-                self.feedback_area.append(feedback)
+                print("AI Output:", repr(feedback)) 
 
 
             # Decode ids and save original df
@@ -172,6 +203,10 @@ class MainWindow(QMainWindow):
                 "Structured Export",
                 f"Structured feedback saved to: {structured_path}"
             )
+
+            # save the df to the app for use with copy buttons
+            self.structured_df = structured_df  
+            self.display_students()
 
         except Exception as e:
             QMessageBox.critical(self, "Error", f"An error occurred: {str(e)}")
