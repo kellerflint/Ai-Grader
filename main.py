@@ -101,12 +101,11 @@ class MainWindow(QMainWindow):
             return
 
         # Group feedback by student name
-        grouped = self.structured_df.groupby("Student Name")["Feedback"].apply(lambda x: "\n\n".join(x)).reset_index()
+        grouped = self.structured_df.groupby("Student Name")
+        all_questions = self.structured_df["Question ID"].unique()
 
         # for each student's data, arrange the box to show
-        for idx, row in grouped.iterrows():
-            student_name = row["Student Name"]
-            feedback = row["Feedback"]
+        for student_name, group in grouped:
 
             # Create a container widget to hold responses
             container = QWidget()
@@ -118,9 +117,24 @@ class MainWindow(QMainWindow):
 
             # display the feedback
             text_edit = QTextEdit()
-            text_edit.setPlainText(feedback)
             text_edit.setReadOnly(True)
             text_edit.setMinimumHeight(100)
+
+            feedback_map = dict(zip(group["Question ID"], zip(group["Feedback"], group["Status"])))
+
+            # Highlight unanswered or incomplete
+            feedback = ""
+            for question in all_questions:
+                if question in feedback_map:
+                    answer, status = feedback_map[question]
+                    if status in ["Missing", "Incomplete"]:
+                        feedback += f"⚠️ {question}: (Missing or incomplete response)\n\n"
+                    else:
+                        feedback += f"{question}:\n{answer}\n\n"
+                else:
+                    feedback += f"⚠️ {question}: (No response submitted)\n\n"
+
+            text_edit.setPlainText(feedback)
 
             # add the copy button for each student feedback
             copy_button = QToolButton()
@@ -246,11 +260,19 @@ class MainWindow(QMainWindow):
                     feedback_text = "\n".join(feedback_lines).strip()
 
                     student_name = inverted.get(temp_id, temp_id)
+
+                    if not feedback_text.strip():
+                        status = "Missing"
+                    elif len(feedback_text.split()) < 5:
+                        status = "Incomplete"
+                    else:
+                        status = "Answered"
                     rows.append({
                         "Student Name": student_name,
                         "Question ID": df_encoded.columns[q_idx],
                         "Grade": grade,
-                        "Feedback": feedback_text
+                        "Feedback": feedback_text,
+                        "Status": status
                     })
 
         return pd.DataFrame(rows)
