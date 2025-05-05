@@ -1,5 +1,6 @@
 from PyQt5.QtWidgets import QApplication, QStyle, QWidget, QGridLayout, QToolButton, QScrollArea, QPushButton, QMainWindow, \
     QFileDialog, QMessageBox, QTextEdit, QLabel, QLineEdit, QDialog, QHBoxLayout, QVBoxLayout
+from functools import partial
 from PyQt5.QtGui import QClipboard
 from PyQt5.QtCore import Qt
 from pathlib import Path
@@ -125,15 +126,19 @@ class MainWindow(QMainWindow):
 
             # Highlight unanswered or incomplete
             feedback = ""
+            copy_text = ""
             for question in all_questions:
                 if question in feedback_map:
                     answer, status = feedback_map[question]
                     if status in ["Missing", "Incomplete"]:
                         feedback += f"⚠️ {question}: (Missing or incomplete response)\n\n"
+                        copy_text += "(Missing or incomplete response)"
                     else:
                         feedback += f"{question}:\n{answer}\n\n"
+                        copy_text += f"{answer}\n\n"
                 else:
                     feedback += f"⚠️ {question}: (No response submitted)\n\n"
+                    copy_text += "(No response submitted)"
 
             text_edit.setPlainText(feedback)
 
@@ -143,7 +148,7 @@ class MainWindow(QMainWindow):
             copy_button.setIcon(qta.icon('fa5s.copy'))
             copy_button.setText("Copy")
             copy_button.setToolTip(f"Copy feedback for {student_name}")
-            copy_button.clicked.connect(lambda _, text=feedback: self.copy_specific_feedback(text))
+            copy_button.clicked.connect(partial(self.copy_specific_feedback, copy_text))
 
             # Add widgets to the layout
             h_layout.addWidget(label)
