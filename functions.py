@@ -46,3 +46,19 @@ def findQuestionIndexes(df):
 def splitDfByQuestion(df, questionIndex):
     new_df = df[['id', df.columns[questionIndex]]]
     return new_df
+
+#generate AI user prompt based on Grade and Feedback columns of a dataframe
+def format_aggregate_prompt(question_id, df):
+    prompt = [
+        f"Here is the data:\n\nQuestion ID: {question_id}\n\nStudent Responses:"
+    ]
+    
+    for _, row in df.iterrows():
+        prompt.append(
+            f"- Grade: {row['Grade']}\n  Feedback: {row['Feedback']}\n"
+        )
+    
+    prompt.append("\nPlease format your response like this:\n")
+    prompt.append("Summary: <summary here>\nSuggestions: <suggestions here>\nAverage Grade: <calculated average grade>")
+    
+    return '\n'.join(prompt)

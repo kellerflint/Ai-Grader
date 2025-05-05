@@ -33,3 +33,28 @@ def get_ai_response(user_input: str):
         return chat_completion.choices[0].message.content
     except:
         return "Error: No response. Check Settings to update your API key"
+    
+# Very similar to get_ai_response, except it works with the aggregate function
+# TODO: Probably make it one function instead
+def get_ai_response_2(system_prompt, user_prompt: str):
+    client = ai_client()
+    print(client)
+    try:
+        print(system_prompt)
+        print(user_prompt)
+        chat_completion = client.chat.completions.create(
+            messages=[
+                {
+                    "role": "system",
+                    "content": system_prompt
+                },
+                {
+                    "role": "user",
+                    "content": user_prompt,
+                }
+            ],
+            model="llama-3.3-70b-versatile",
+        )
+        return chat_completion.choices[0].message.content
+    except:
+        return "Error: No response. Check Settings to update your API key"
