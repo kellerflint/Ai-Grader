@@ -5,7 +5,7 @@ from PyQt5.QtCore import Qt
 from pathlib import Path
 import sys
 import pandas as pd
-from ai_client import get_ai_response
+from ai_client import get_ai_response, get_ai_response_2
 from api_key_functions import load_api_key, save_api_key
 import os
 import functions
@@ -206,6 +206,9 @@ class MainWindow(QMainWindow):
 
             # save the df to the app for use with copy buttons
             self.structured_df = structured_df  
+            # print(self.structured_df)
+            aggregate_grades = self.get_aggregate_grades()
+            self.display_aggregate_feedback(aggregate_grades)
             self.display_students()
 
         except Exception as e:
@@ -254,6 +257,55 @@ class MainWindow(QMainWindow):
                     })
 
         return pd.DataFrame(rows)
+    
+    def get_aggregate_grades(self):
+        # Filter out rows where feedback is too short
+        filtered_df = self.structured_df[self.structured_df['Feedback'].str.len() > 10]
+
+        # Group by Question ID and store each group in a dictionary
+        question_dfs = {qid: group.reset_index(drop=True) for qid, group in filtered_df.groupby('Question ID')}
+
+        aggregate_feedback = [
+            "Aggregate Feedback: "
+        ]
+
+        system_prompt = """You are an AI grader assistant. I will give you a list of student feedback and grades for a single question. Please provide:
+
+1. A brief summary of the feedback trends across students.
+2. Suggestions for how students could improve their answers.
+3. The average grade.
+"""
+        
+        # Access each DataFrame by Question ID
+        for qid, qdf in question_dfs.items():
+            #generate user prompt based on grades and feedback
+            user_prompt = functions.format_aggregate_prompt(qid, qdf)
+            aggregate_feedback.append(f"\n{qid}\n")
+
+            #pass system and user prompt into AI
+            ai_response = get_ai_response_2(system_prompt, user_prompt)
+            aggregate_feedback.append(ai_response)
+
+        aggregate_feedback = '\n'.join(aggregate_feedback)
+        return aggregate_feedback
+
+    def display_aggregate_feedback(self, feedback):
+        # Create a container widget to hold responses
+        container = QWidget()
+        h_layout = QHBoxLayout(container)
+
+        # display the feedback
+        text_edit = QTextEdit()
+        text_edit.setPlainText(feedback)
+        text_edit.setReadOnly(True)
+        text_edit.setMinimumHeight(100)
+
+        # Add widgets to the layout
+        h_layout.addWidget(text_edit)
+
+        # add container with all the data
+        self.scroll_layout.addWidget(container)
+
     def show_faq(self, event):
         msg = QMessageBox()  # 'msg' is the QMessageBox, not the faqButton
         msg.setIcon(QMessageBox.Information)
