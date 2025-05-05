@@ -90,11 +90,12 @@ class MainWindow(QMainWindow):
         self.file_path = None
 
     def display_students(self):
-        # Clear previous buttons if refreshing
-        for i in reversed(range(self.scroll_layout.count())):
-            widget_to_remove = self.scroll_layout.itemAt(i).widget()
-            if widget_to_remove:
-                widget_to_remove.setParent(None)
+        # Clear previous buttons if refreshing (this will cause issues for any widgets 
+        # added in other methods, so we should move it elsewhere)
+        # for i in reversed(range(self.scroll_layout.count())):
+        #   widget_to_remove = self.scroll_layout.itemAt(i).widget()
+        #   if widget_to_remove:
+        #       widget_to_remove.setParent(None)
 
         # check if there is a dataframe to pull from
         if not hasattr(self, 'structured_df') or self.structured_df is None:
