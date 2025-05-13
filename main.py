@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QApplication, QStyle, QWidget, QGridLayout, QToolButton, QScrollArea, QPushButton, QMainWindow, \
-    QFileDialog, QMessageBox, QTextEdit, QLabel, QLineEdit, QDialog, QHBoxLayout, QVBoxLayout, QFrame
+    QFileDialog, QMessageBox, QTextEdit, QLabel, QLineEdit, QDialog, QHBoxLayout, QVBoxLayout, QFrame, QSpacerItem, QSizePolicy
 from functools import partial
 from PyQt5.QtGui import QClipboard
 from PyQt5.QtCore import Qt
@@ -42,18 +42,29 @@ class MainWindow(QMainWindow):
         # Create and align the buttons
         layout.setContentsMargins(0, 50, 0, 0)
 
+        # history menu
+        self.history_button = QPushButton()
+        self.history_button.setObjectName("historyButton")
+        self.history_button.setIcon(qta.icon('fa6s.bars'))
+        self.history_button.setFixedSize(50, 50)
+        self.history_button.setObjectName("historyButton")
+        layout.addWidget(self.history_button, 0, 0, Qt.AlignTop)
+
+        # upload button
         self.upload_button = QPushButton("Upload")
         self.upload_button.setFixedWidth(300)
         self.upload_button.setFixedHeight(50)
         self.upload_button.clicked.connect(self.upload_file)
-        layout.addWidget(self.upload_button, 0, 0, 1, 1, Qt.AlignTop)
+        layout.addWidget(self.upload_button, 0, 1, 1, 1, Qt.AlignTop)
         
-        # submit button
+        # submit button, disabled until file is uploaded
         self.ask_ai_button = QPushButton("Submit")
         self.ask_ai_button.setFixedWidth(300)
         self.ask_ai_button.setFixedHeight(50)
+        self.ask_ai_button.setToolTip("Upload a file to submit!")
+        self.ask_ai_button.setEnabled(False)
         self.ask_ai_button.clicked.connect(self.process_file)
-        layout.addWidget(self.ask_ai_button, 0, 2, 1, 1, Qt.AlignTop)
+        layout.addWidget(self.ask_ai_button, 0, 3, 1, 1, Qt.AlignTop)
         
         # faq button
         self.faqButton = QPushButton()
@@ -115,7 +126,7 @@ class MainWindow(QMainWindow):
                     feedback += f"⚠️ {question}: (No response submitted)\n\n"
                     copy_text += "(No response submitted)"
 
-            # Collapsible Sections
+           # Collapsible Sections
             section_widget = QWidget()
             section_layout = QVBoxLayout(section_widget)
             section_layout.setContentsMargins(0, 0, 0, 0)
@@ -139,8 +150,7 @@ class MainWindow(QMainWindow):
             copy_button.setToolTip(f"Copy feedback for {student_name}")
             copy_button.clicked.connect(partial(self.copy_specific_feedback, copy_text))
 
-            header_layout.addWidget(toggle_button)
-            header_layout.addStretch()
+            header_layout.addWidget(toggle_button, stretch=4)
             header_layout.addWidget(copy_button)
 
             # Body (feedback text)
@@ -148,6 +158,9 @@ class MainWindow(QMainWindow):
             body_widget.setReadOnly(True)
             body_widget.setPlainText(feedback)
             body_widget.setVisible(False)
+
+            section_layout.addWidget(header_frame)
+            section_layout.addWidget(body_widget)
 
             # Toggle behavior
             def toggle_body(checked):
@@ -161,9 +174,7 @@ class MainWindow(QMainWindow):
                 toggle_button.setArrowType(Qt.DownArrow if checked else Qt.RightArrow)
 
             toggle_button.toggled.connect(toggle_body)
-
-            section_layout.addWidget(header_frame)
-            section_layout.addWidget(body_widget)
+            self.toggle_widgets.append((toggle_button, body_widget))
 
             # Add to main layout
             self.student_layout.addWidget(section_widget)
@@ -180,6 +191,8 @@ class MainWindow(QMainWindow):
 
         if file_path:
             self.file_path = file_path
+            self.ask_ai_button.setEnabled(True)
+            self.ask_ai_button.setToolTip("Click to submit file")
             QMessageBox.information(self, "File Uploaded", f"File uploaded successfully: {file_path}")
 
     def process_file(self):
@@ -315,6 +328,13 @@ class MainWindow(QMainWindow):
         # Create a container widget to hold responses
         container = QWidget()
         h_layout = QHBoxLayout(container)
+
+        # header for aggregate data
+        header_label = QLabel("Class Summary")
+        header_label.setStyleSheet("font-weight: bold; font-size: 24px;") 
+        header_label.setAlignment(Qt.AlignLeft) 
+        h_layout.addWidget(header_label)
+
 
         # display the feedback
         text_edit = QTextEdit()
