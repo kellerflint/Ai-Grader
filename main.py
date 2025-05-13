@@ -197,22 +197,6 @@ class MainWindow(QMainWindow):
 
             # Get all question columns
             question_indexes = functions.findQuestionIndexes(df)
-            
-            # Process each question
-            for q_idx in question_indexes:
-                # Get single question df
-                question_df = functions.splitDfByQuestion(df, q_idx)
-                
-                # Get AI feedback
-                csv_buffer = StringIO()
-                question_df.to_csv(csv_buffer, index=False)
-                # Get the CSV content as a string
-                csv_string = csv_buffer.getvalue()
-
-                # new_df.to_csv
-                feedback = get_ai_response(csv_string)
-                print("AI Output:", repr(feedback)) 
-
 
             # Decode ids and save original df
             df = functions.useMapDecode(df, idMap)
