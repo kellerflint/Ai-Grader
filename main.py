@@ -99,7 +99,7 @@ class MainWindow(QMainWindow):
         self.file_path = None
 
     def display_students(self):
-        # Check dataframe
+        # Check dataframe exists
         if not hasattr(self, 'structured_df') or self.structured_df is None:
             return
 
@@ -130,6 +130,7 @@ class MainWindow(QMainWindow):
             section_widget = QWidget()
             section_layout = QVBoxLayout(section_widget)
             section_layout.setContentsMargins(0, 0, 0, 0)
+            section_layout.setSpacing(5)
 
             # Header button (collapsible + copy button)
             header_frame = QFrame()
@@ -141,17 +142,9 @@ class MainWindow(QMainWindow):
             toggle_button.setText(str(student_name))
             toggle_button.setCheckable(True)
             toggle_button.setChecked(False)
-            toggle_button.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+            toggle_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
             toggle_button.setArrowType(Qt.RightArrow)
-
-            # Copy button
-            copy_button = QToolButton()
-            copy_button.setIcon(qta.icon('fa5s.copy'))
-            copy_button.setToolTip(f"Copy feedback for {student_name}")
-            copy_button.clicked.connect(partial(self.copy_specific_feedback, copy_text))
-
-            header_layout.addWidget(toggle_button, stretch=4)
-            header_layout.addWidget(copy_button)
+            toggle_button.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
 
             # Body (feedback text)
             body_widget = QTextEdit()
@@ -159,30 +152,34 @@ class MainWindow(QMainWindow):
             body_widget.setPlainText(feedback)
             body_widget.setVisible(False)
 
+            # Copy button
+            copy_button = QToolButton()
+            copy_button.setIcon(qta.icon('fa5s.copy'))
+            copy_button.setToolTip(f"Copy feedback for {student_name}")
+            copy_button.clicked.connect(partial(self.copy_specific_feedback, copy_text))
+            
+            header_layout.addWidget(toggle_button)
+            header_layout.addWidget(copy_button)
+
             section_layout.addWidget(header_frame)
             section_layout.addWidget(body_widget)
 
             # Toggle behavior
-            def toggle_body(checked):
-                # Accordion: close others
-                if checked:
-                    for btn, body in self.toggle_widgets:
-                        if btn is not toggle_button:
-                            btn.setChecked(False)  # will auto-hide their body
-
-                body_widget.setVisible(checked)
-                toggle_button.setArrowType(Qt.DownArrow if checked else Qt.RightArrow)
+            def toggle_body(checked, button=toggle_button, body=body_widget):
+                print(f"Toggling {toggle_button.text()} to {'open' if checked else 'closed'}")
+                body.setVisible(checked)
+                button.setArrowType(Qt.DownArrow if checked else Qt.RightArrow)
 
             toggle_button.toggled.connect(toggle_body)
             self.toggle_widgets.append((toggle_button, body_widget))
 
             # Add to main layout
             self.student_layout.addWidget(section_widget)
+            self.student_layout.update()
 
     def copy_specific_feedback(self, feedback_text):
         clipboard = QApplication.clipboard()
         clipboard.setText(str(feedback_text))
-        print(f"Copied feedback: {feedback_text}")
 
     def upload_file(self):
         # Open a file dialog to select a CSV file
