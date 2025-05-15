@@ -12,7 +12,7 @@ QPushButton {
   outline: 0px;
 }
 
-#faqButton, #copyButton, #settingsButton, #historyButton {
+#faqButton, #copyButton, #settingsButton, #historyButton, #expandButton {
   background-color: none;
   color: black;
   border-radius: none;

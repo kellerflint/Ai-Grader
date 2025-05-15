@@ -47,7 +47,6 @@ class MainWindow(QMainWindow):
         self.history_button.setObjectName("historyButton")
         self.history_button.setIcon(qta.icon('fa6s.bars'))
         self.history_button.setFixedSize(50, 50)
-        self.history_button.setObjectName("historyButton")
         layout.addWidget(self.history_button, 0, 0, Qt.AlignTop)
 
         # upload button
@@ -64,7 +63,16 @@ class MainWindow(QMainWindow):
         self.ask_ai_button.setToolTip("Upload a file to submit!")
         self.ask_ai_button.setEnabled(False)
         self.ask_ai_button.clicked.connect(self.process_file)
-        layout.addWidget(self.ask_ai_button, 0, 3, 1, 1, Qt.AlignTop)
+        layout.addWidget(self.ask_ai_button, 0, 2, 1, 1, Qt.AlignTop)
+
+        # expand all button
+        self.expand_all_button = QPushButton()
+        self.expand_all_button.setCheckable(True)
+        self.expand_all_button.setObjectName("expandButton")
+        self.expand_all_button.clicked.connect(self.toggle_all_sections)
+        self.ask_ai_button.setEnabled(False)
+        self.expand_all_button.setToolTip("Expand or collapse all")
+        self.expand_all_button.setIcon(qta.icon('fa6s.caret-down'))
         
         # faq button
         self.faqButton = QPushButton()
@@ -72,18 +80,17 @@ class MainWindow(QMainWindow):
         self.faqButton.clicked.connect(self.show_faq)
         self.faqButton.setIcon(self.style().standardIcon(QStyle.SP_MessageBoxQuestion))
         self.faqButton.resize(self.faqButton.sizeHint())
-        # layout.addWidget(self.faqButton, 0, 4, 1, 1, Qt.AlignRight)
 
         # Settings Menu
         self.settingsButton = QPushButton()
         self.settingsButton.setObjectName("settingsButton")
         self.settingsButton.setIcon(qta.icon('mdi.cog'))
         self.settingsButton.clicked.connect(self.open_settings_dialog)
-        # layout.addWidget(self.settingsButton, 0, 3, 1, 1, Qt.AlignRight)
 
         # settings button
         right_hbox = QHBoxLayout()
         right_hbox.setContentsMargins(0, 0, 0, 0)
+        right_hbox.addWidget(self.expand_all_button)
         right_hbox.addWidget(self.settingsButton)
         right_hbox.addWidget(self.faqButton)
         layout.addLayout(right_hbox, 0,3,1,2, Qt.AlignRight)
@@ -103,7 +110,7 @@ class MainWindow(QMainWindow):
         if not hasattr(self, 'structured_df') or self.structured_df is None:
             return
 
-        self.toggle_widgets = []
+        self.expand_all_button.setEnabled(True)
 
         grouped = self.structured_df.groupby("Student Name")
         all_questions = self.structured_df["Question ID"].unique()
@@ -177,6 +184,12 @@ class MainWindow(QMainWindow):
             self.student_layout.addWidget(section_widget)
             self.student_layout.update()
             
+    def toggle_all_sections(self):
+        expand = self.expand_all_button.isChecked()
+        self.expand_all_button.setText("Collapse All" if expand else "Expand All")
+
+        for toggle_button, body_widget in self.toggle_widgets:
+            toggle_button.setChecked(expand)
 
     # add a specified section of text to the clipboard
     def copy_specific_feedback(self, feedback_text):
@@ -330,6 +343,8 @@ class MainWindow(QMainWindow):
         v_layout.setContentsMargins(0, 0, 0, 0)
         v_layout.setSpacing(5)
 
+        self.toggle_widgets = []
+
         # header for aggregate data
         header_frame = QFrame()
         header_layout = QHBoxLayout(header_frame)
@@ -351,6 +366,7 @@ class MainWindow(QMainWindow):
 
         header_layout.addWidget(toggle_button)
         header_frame.setLayout(header_layout)
+        self.toggle_widgets.append((toggle_button, text_edit))
 
         v_layout.addWidget(header_frame)
         v_layout.addWidget(text_edit)
