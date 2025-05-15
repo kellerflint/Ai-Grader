@@ -8,6 +8,7 @@ import sys
 import pandas as pd
 from ai_client import get_ai_response, get_ai_response_2
 from api_key_functions import load_api_key, save_api_key
+from logs import save_df_as_log
 import os
 import functions
 from io import StringIO
@@ -237,6 +238,7 @@ class MainWindow(QMainWindow):
                 "structured_feedback.csv"
             )
             structured_df.to_csv(structured_path, index=False)
+            save_df_as_log(structured_df)
             QMessageBox.information(
                 self,
                 "Structured Export",
