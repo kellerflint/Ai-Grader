@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QApplication, QStyle, QWidget, QGridLayout, QToolButton, QScrollArea, QPushButton, QMainWindow, \
-    QFileDialog, QMessageBox, QTextEdit, QLabel, QLineEdit, QDialog, QHBoxLayout, QVBoxLayout
+    QFileDialog, QMessageBox, QTextEdit, QLabel, QLineEdit, QDialog, QHBoxLayout, QVBoxLayout, QFrame, QSpacerItem, QSizePolicy
 from functools import partial
 from PyQt5.QtGui import QClipboard
 from PyQt5.QtCore import Qt
@@ -42,18 +42,37 @@ class MainWindow(QMainWindow):
         # Create and align the buttons
         layout.setContentsMargins(0, 50, 0, 0)
 
+        # history menu
+        self.history_button = QPushButton()
+        self.history_button.setObjectName("historyButton")
+        self.history_button.setIcon(qta.icon('fa6s.bars'))
+        self.history_button.setFixedSize(50, 50)
+        layout.addWidget(self.history_button, 0, 0, Qt.AlignTop)
+
+        # upload button
         self.upload_button = QPushButton("Upload")
         self.upload_button.setFixedWidth(300)
         self.upload_button.setFixedHeight(50)
         self.upload_button.clicked.connect(self.upload_file)
-        layout.addWidget(self.upload_button, 0, 0, 1, 1, Qt.AlignTop)
+        layout.addWidget(self.upload_button, 0, 1, 1, 1, Qt.AlignTop)
         
-        # submit button
+        # submit button, disabled until file is uploaded
         self.ask_ai_button = QPushButton("Submit")
         self.ask_ai_button.setFixedWidth(300)
         self.ask_ai_button.setFixedHeight(50)
+        self.ask_ai_button.setToolTip("Upload a file to submit!")
+        self.ask_ai_button.setEnabled(False)
         self.ask_ai_button.clicked.connect(self.process_file)
         layout.addWidget(self.ask_ai_button, 0, 2, 1, 1, Qt.AlignTop)
+
+        # expand all button
+        self.expand_all_button = QPushButton()
+        self.expand_all_button.setCheckable(True)
+        self.expand_all_button.setObjectName("expandButton")
+        self.expand_all_button.clicked.connect(self.toggle_all_sections)
+        self.ask_ai_button.setEnabled(False)
+        self.expand_all_button.setToolTip("Expand or collapse all")
+        self.expand_all_button.setIcon(qta.icon('fa6s.caret-down'))
         
         # faq button
         self.faqButton = QPushButton()
@@ -61,29 +80,25 @@ class MainWindow(QMainWindow):
         self.faqButton.clicked.connect(self.show_faq)
         self.faqButton.setIcon(self.style().standardIcon(QStyle.SP_MessageBoxQuestion))
         self.faqButton.resize(self.faqButton.sizeHint())
-        # layout.addWidget(self.faqButton, 0, 4, 1, 1, Qt.AlignRight)
 
         # Settings Menu
         self.settingsButton = QPushButton()
         self.settingsButton.setObjectName("settingsButton")
         self.settingsButton.setIcon(qta.icon('mdi.cog'))
         self.settingsButton.clicked.connect(self.open_settings_dialog)
-        # layout.addWidget(self.settingsButton, 0, 3, 1, 1, Qt.AlignRight)
 
         # settings button
         right_hbox = QHBoxLayout()
         right_hbox.setContentsMargins(0, 0, 0, 0)
+        right_hbox.addWidget(self.expand_all_button)
         right_hbox.addWidget(self.settingsButton)
         right_hbox.addWidget(self.faqButton)
         layout.addLayout(right_hbox, 0,3,1,2, Qt.AlignRight)
 
         # place for feedback
-        self.feedback_area = QScrollArea()
-        self.feedback_area.setWidgetResizable(True)
-        self.content = QWidget()
-        self.scroll_layout = QVBoxLayout(self.content)
-        self.feedback_area.setWidget(self.content)
-        layout.addWidget(self.feedback_area, 2, 0, 1, 5) 
+        self.feedback_widget = QWidget()
+        self.student_layout = QVBoxLayout(self.feedback_widget)
+        layout.addWidget(self.feedback_widget, 2, 0, 1, 5) 
 
         self.resize(1000, 800)
 
@@ -91,40 +106,18 @@ class MainWindow(QMainWindow):
         self.file_path = None
 
     def display_students(self):
-        # Clear previous buttons if refreshing (this will cause issues for any widgets 
-        # added in other methods, so we should move it elsewhere)
-        # for i in reversed(range(self.scroll_layout.count())):
-        #   widget_to_remove = self.scroll_layout.itemAt(i).widget()
-        #   if widget_to_remove:
-        #       widget_to_remove.setParent(None)
-
-        # check if there is a dataframe to pull from
+        # Check dataframe exists
         if not hasattr(self, 'structured_df') or self.structured_df is None:
             return
 
-        # Group feedback by student name
+        self.expand_all_button.setEnabled(True)
+
         grouped = self.structured_df.groupby("Student Name")
         all_questions = self.structured_df["Question ID"].unique()
 
-        # for each student's data, arrange the box to show
         for student_name, group in grouped:
-
-            # Create a container widget to hold responses
-            container = QWidget()
-            h_layout = QHBoxLayout(container)
-
-            # force student name to be a string and prevent errors
-            label = QLabel(str(student_name))
-            label.setFixedWidth(150)
-
-            # display the feedback
-            text_edit = QTextEdit()
-            text_edit.setReadOnly(True)
-            text_edit.setMinimumHeight(100)
-
+            # Build feedback text for student
             feedback_map = dict(zip(group["Question ID"], zip(group["Feedback"], group["Status"])))
-
-            # Highlight unanswered or incomplete
             feedback = ""
             copy_text = ""
             for question in all_questions:
@@ -140,28 +133,68 @@ class MainWindow(QMainWindow):
                     feedback += f"⚠️ {question}: (No response submitted)\n\n"
                     copy_text += "(No response submitted)"
 
-            text_edit.setPlainText(feedback)
+           # Collapsible Sections
+            section_widget = QWidget()
+            section_layout = QVBoxLayout(section_widget)
+            section_layout.setContentsMargins(0, 0, 0, 0)
+            section_layout.setSpacing(5)
 
-            # add the copy button for each student feedback
+            # Header button (collapsible + copy button)
+            header_frame = QFrame()
+            header_layout = QHBoxLayout(header_frame)
+            header_layout.setContentsMargins(0, 0, 0, 0)
+
+            # Expand/Collapse button
+            toggle_button = QToolButton()
+            toggle_button.setText(str(student_name))
+            toggle_button.setCheckable(True)
+            toggle_button.setChecked(False)
+            toggle_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+            toggle_button.setArrowType(Qt.RightArrow)
+            toggle_button.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+
+            # Body (feedback text)
+            body_widget = QTextEdit()
+            body_widget.setReadOnly(True)
+            body_widget.setPlainText(feedback)
+            body_widget.setVisible(False)
+
+            # Copy button
             copy_button = QToolButton()
-            copy_button.setObjectName("copyButton")
             copy_button.setIcon(qta.icon('fa5s.copy'))
-            copy_button.setText("Copy")
             copy_button.setToolTip(f"Copy feedback for {student_name}")
             copy_button.clicked.connect(partial(self.copy_specific_feedback, copy_text))
+            
+            header_layout.addWidget(toggle_button)
+            header_layout.addWidget(copy_button)
 
-            # Add widgets to the layout
-            h_layout.addWidget(label)
-            h_layout.addWidget(text_edit)
-            h_layout.addWidget(copy_button)
+            section_layout.addWidget(header_frame)
+            section_layout.addWidget(body_widget)
 
-            # add container with all the data
-            self.scroll_layout.addWidget(container)
+            # Toggle behavior
+            def toggle_body(checked, button=toggle_button, body=body_widget):
+                body.setVisible(checked)
+                button.setArrowType(Qt.DownArrow if checked else Qt.RightArrow)
 
+
+            toggle_button.toggled.connect(toggle_body)
+            self.toggle_widgets.append((toggle_button, body_widget))
+
+            # Add to main layout
+            self.student_layout.addWidget(section_widget)
+            self.student_layout.update()
+            
+    def toggle_all_sections(self):
+        expand = self.expand_all_button.isChecked()
+        self.expand_all_button.setText("Collapse All" if expand else "Expand All")
+
+        for toggle_button, body_widget in self.toggle_widgets:
+            toggle_button.setChecked(expand)
+
+    # add a specified section of text to the clipboard
     def copy_specific_feedback(self, feedback_text):
         clipboard = QApplication.clipboard()
-        clipboard.setText(feedback_text)
-        print(f"Copied feedback: {feedback_text}")
+        clipboard.setText(str(feedback_text))
 
     def upload_file(self):
         # Open a file dialog to select a CSV file
@@ -170,6 +203,8 @@ class MainWindow(QMainWindow):
 
         if file_path:
             self.file_path = file_path
+            self.ask_ai_button.setEnabled(True)
+            self.ask_ai_button.setToolTip("Click to submit file")
             QMessageBox.information(self, "File Uploaded", f"File uploaded successfully: {file_path}")
 
     def process_file(self):
@@ -304,19 +339,48 @@ class MainWindow(QMainWindow):
     def display_aggregate_feedback(self, feedback):
         # Create a container widget to hold responses
         container = QWidget()
-        h_layout = QHBoxLayout(container)
+        v_layout = QVBoxLayout(container)
+        v_layout.setContentsMargins(0, 0, 0, 0)
+        v_layout.setSpacing(5)
 
-        # display the feedback
+        self.toggle_widgets = []
+
+        # header for aggregate data
+        header_frame = QFrame()
+        header_layout = QHBoxLayout(header_frame)
+        header_layout.setContentsMargins(0, 0, 0, 0)
+
+        toggle_button = QToolButton()
+        toggle_button.setText("Class Summary")
+        toggle_button.setCheckable(True)
+        toggle_button.setChecked(False)
+        toggle_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        toggle_button.setArrowType(Qt.RightArrow)
+        toggle_button.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+
         text_edit = QTextEdit()
         text_edit.setPlainText(feedback)
         text_edit.setReadOnly(True)
         text_edit.setMinimumHeight(100)
+        text_edit.setVisible(False)
 
-        # Add widgets to the layout
-        h_layout.addWidget(text_edit)
+        header_layout.addWidget(toggle_button)
+        header_frame.setLayout(header_layout)
+        self.toggle_widgets.append((toggle_button, text_edit))
+
+        v_layout.addWidget(header_frame)
+        v_layout.addWidget(text_edit)
+
+        def toggle_aggregate_body(checked, body=text_edit, button=toggle_button):
+            body.setVisible(checked)
+            button.setArrowType(Qt.DownArrow if checked else Qt.RightArrow)
+
+        toggle_button.toggled.connect(toggle_aggregate_body)
+
+        self.student_layout.addWidget(container)
 
         # add container with all the data
-        self.scroll_layout.addWidget(container)
+        self.student_layout.addWidget(container)
 
     def show_faq(self, event):
         msg = QMessageBox()  # 'msg' is the QMessageBox, not the faqButton
