@@ -166,9 +166,9 @@ class MainWindow(QMainWindow):
 
             # Toggle behavior
             def toggle_body(checked, button=toggle_button, body=body_widget):
-                print(f"Toggling {toggle_button.text()} to {'open' if checked else 'closed'}")
                 body.setVisible(checked)
                 button.setArrowType(Qt.DownArrow if checked else Qt.RightArrow)
+
 
             toggle_button.toggled.connect(toggle_body)
             self.toggle_widgets.append((toggle_button, body_widget))
@@ -176,7 +176,9 @@ class MainWindow(QMainWindow):
             # Add to main layout
             self.student_layout.addWidget(section_widget)
             self.student_layout.update()
+            
 
+    # add a specified section of text to the clipboard
     def copy_specific_feedback(self, feedback_text):
         clipboard = QApplication.clipboard()
         clipboard.setText(str(feedback_text))
@@ -324,23 +326,42 @@ class MainWindow(QMainWindow):
     def display_aggregate_feedback(self, feedback):
         # Create a container widget to hold responses
         container = QWidget()
-        h_layout = QHBoxLayout(container)
+        v_layout = QVBoxLayout(container)
+        v_layout.setContentsMargins(0, 0, 0, 0)
+        v_layout.setSpacing(5)
 
         # header for aggregate data
-        header_label = QLabel("Class Summary")
-        header_label.setStyleSheet("font-weight: bold; font-size: 24px;") 
-        header_label.setAlignment(Qt.AlignLeft) 
-        h_layout.addWidget(header_label)
+        header_frame = QFrame()
+        header_layout = QHBoxLayout(header_frame)
+        header_layout.setContentsMargins(0, 0, 0, 0)
 
+        toggle_button = QToolButton()
+        toggle_button.setText("Class Summary")
+        toggle_button.setCheckable(True)
+        toggle_button.setChecked(False)
+        toggle_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        toggle_button.setArrowType(Qt.RightArrow)
+        toggle_button.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
 
-        # display the feedback
         text_edit = QTextEdit()
         text_edit.setPlainText(feedback)
         text_edit.setReadOnly(True)
         text_edit.setMinimumHeight(100)
+        text_edit.setVisible(False)
 
-        # Add widgets to the layout
-        h_layout.addWidget(text_edit)
+        header_layout.addWidget(toggle_button)
+        header_frame.setLayout(header_layout)
+
+        v_layout.addWidget(header_frame)
+        v_layout.addWidget(text_edit)
+
+        def toggle_aggregate_body(checked, body=text_edit, button=toggle_button):
+            body.setVisible(checked)
+            button.setArrowType(Qt.DownArrow if checked else Qt.RightArrow)
+
+        toggle_button.toggled.connect(toggle_aggregate_body)
+
+        self.student_layout.addWidget(container)
 
         # add container with all the data
         self.student_layout.addWidget(container)
