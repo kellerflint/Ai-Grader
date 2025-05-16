@@ -72,7 +72,6 @@ class MainWindow(QMainWindow):
         self.expand_all_button.setObjectName("expandButton")
         self.expand_all_button.clicked.connect(self.toggle_all_sections)
         self.expand_all_button.clicked.disconnect()
-        self.ask_ai_button.setEnabled(False)
         self.expand_all_button.setToolTip("Cannot expand until information is processed")
         self.expand_all_button.setIcon(qta.icon('fa6s.caret-down', color='lightgray'))
         
@@ -111,6 +110,10 @@ class MainWindow(QMainWindow):
         # Check dataframe exists
         if not hasattr(self, 'structured_df') or self.structured_df is None:
             return
+
+        section_label = QLabel("Individual Student Grades")
+        section_label.setStyleSheet("font-weight: bold; font-size: 20px; margin: 10px 0;")
+        self.student_layout.addWidget(section_label)
 
         self.expand_all_button.clicked.connect(self.toggle_all_sections)
         self.expand_all_button.setToolTip("Expand all")
@@ -363,7 +366,15 @@ class MainWindow(QMainWindow):
         v_layout.setContentsMargins(0, 0, 0, 0)
         v_layout.setSpacing(5)
 
+        v_layout
+
+        # create toggle widget for use with this AND with display students
         self.toggle_widgets = []
+
+        header_label = QLabel("Class Summary")
+        header_label.setStyleSheet("font-weight: bold; font-size: 20px; margin: 10px 0;")
+        header_label.setAlignment(Qt.AlignLeft)
+        v_layout.addWidget(header_label)
 
         # header for aggregate data
         header_frame = QFrame()
@@ -371,7 +382,7 @@ class MainWindow(QMainWindow):
         header_layout.setContentsMargins(0, 0, 0, 0)
 
         toggle_button = QToolButton()
-        toggle_button.setText("Class Summary")
+        toggle_button.setText("Aggregate Data")
         toggle_button.setCheckable(True)
         toggle_button.setChecked(False)
         toggle_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
