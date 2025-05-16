@@ -62,6 +62,7 @@ class MainWindow(QMainWindow):
         self.ask_ai_button.setFixedHeight(50)
         self.ask_ai_button.setToolTip("Upload a file to submit!")
         self.ask_ai_button.setEnabled(False)
+        self.ask_ai_button.setStyleSheet("background-color: lightgray; color: gray;")
         self.ask_ai_button.clicked.connect(self.process_file)
         layout.addWidget(self.ask_ai_button, 0, 2, 1, 1, Qt.AlignTop)
 
@@ -217,6 +218,14 @@ class MainWindow(QMainWindow):
             self.ask_ai_button.setToolTip("Click to submit file")
             QMessageBox.information(self, "File Uploaded", f"File uploaded successfully: {file_path}")
 
+        # now that we have data, enable the submit button        
+        self.on_file_uploaded()
+
+    def on_file_uploaded(self):
+                self.ask_ai_button.setEnabled(True)
+                self.ask_ai_button.setStyleSheet("")  
+                self.ask_ai_button.setToolTip("Click to submit")
+
     def process_file(self):
         if not self.file_path:
             QMessageBox.warning(self, "No File", "Please upload a CSV file first.")
@@ -264,6 +273,7 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, "Error", f"An error occurred: {str(e)}")
 
     def parse_ai_response(self, response):
+
         try:
             parts = response.split('Grade:')
             # everything before “Grade:” is the feedback text
