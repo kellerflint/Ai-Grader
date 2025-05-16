@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QApplication, QStyle, QWidget, QGridLayout, QToolButton, QScrollArea, QPushButton, QMainWindow, \
     QFileDialog, QMessageBox, QTextEdit, QLabel, QLineEdit, QDialog, QHBoxLayout, QVBoxLayout, QFrame, QSpacerItem, QSizePolicy
 from functools import partial
-from PyQt5.QtGui import QClipboard
+from PyQt5.QtGui import QClipboard, QColor
 from PyQt5.QtCore import Qt
 from pathlib import Path
 import sys
@@ -70,9 +70,10 @@ class MainWindow(QMainWindow):
         self.expand_all_button.setCheckable(True)
         self.expand_all_button.setObjectName("expandButton")
         self.expand_all_button.clicked.connect(self.toggle_all_sections)
+        self.expand_all_button.clicked.disconnect()
         self.ask_ai_button.setEnabled(False)
-        self.expand_all_button.setToolTip("Expand or collapse all")
-        self.expand_all_button.setIcon(qta.icon('fa6s.caret-down'))
+        self.expand_all_button.setToolTip("Cannot expand until information is processed")
+        self.expand_all_button.setIcon(qta.icon('fa6s.caret-down', color='lightgray'))
         
         # faq button
         self.faqButton = QPushButton()
@@ -110,7 +111,10 @@ class MainWindow(QMainWindow):
         if not hasattr(self, 'structured_df') or self.structured_df is None:
             return
 
+        self.expand_all_button.clicked.connect(self.toggle_all_sections)
+        self.expand_all_button.setToolTip("Expand all")
         self.expand_all_button.setEnabled(True)
+        self.expand_all_button.setIcon(qta.icon('fa6s.caret-down', color="black"))
 
         grouped = self.structured_df.groupby("Student Name")
         all_questions = self.structured_df["Question ID"].unique()
@@ -186,10 +190,16 @@ class MainWindow(QMainWindow):
             
     def toggle_all_sections(self):
         expand = self.expand_all_button.isChecked()
-        self.expand_all_button.setText("Collapse All" if expand else "Expand All")
+        self.expand_all_button.setToolTip("Collapse All" if expand else "Expand All")
 
         for toggle_button, body_widget in self.toggle_widgets:
             toggle_button.setChecked(expand)
+        
+        # force app to process so our sections collapse to the correct size
+        QApplication.processEvents()
+
+        self.feedback_widget.adjustSize()
+        self.feedback_widget.updateGeometry()
 
     # add a specified section of text to the clipboard
     def copy_specific_feedback(self, feedback_text):
