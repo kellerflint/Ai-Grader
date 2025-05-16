@@ -99,7 +99,14 @@ class MainWindow(QMainWindow):
         # place for feedback
         self.feedback_widget = QWidget()
         self.student_layout = QVBoxLayout(self.feedback_widget)
-        layout.addWidget(self.feedback_widget, 2, 0, 1, 5) 
+        self.feedback_widget.setLayout(self.student_layout)
+
+        # Wrap feedback_widget in a scroll area
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setWidget(self.feedback_widget)
+
+        layout.addWidget(scroll_area, 2, 0, 1, 5)
 
         self.resize(1000, 800)
 
@@ -162,10 +169,11 @@ class MainWindow(QMainWindow):
             toggle_button.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
 
             # Body (feedback text)
-            body_widget = QTextEdit()
-            body_widget.setReadOnly(True)
-            body_widget.setPlainText(feedback)
+            body_widget = QLabel()
+            body_widget.setText(feedback)
+            body_widget.setWordWrap(True)
             body_widget.setVisible(False)
+            body_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
 
             # Copy button
             copy_button = QToolButton()
@@ -197,7 +205,14 @@ class MainWindow(QMainWindow):
         self.expand_all_button.setToolTip("Collapse All" if expand else "Expand All")
 
         for toggle_button, body_widget in self.toggle_widgets:
-            toggle_button.setChecked(expand)
+            body_widget.setVisible(expand)
+            toggle_button.setArrowType(Qt.DownArrow if expand else Qt.RightArrow)
+            toggle_button.setChecked(expand)  # Optional: keeps internal state consistent
+
+        # update all the button icons
+        self.expand_all_button.setToolTip("Collapse all" if expand else "Expand all")
+        icon = qta.icon('fa6s.caret-up' if expand else 'fa6s.caret-down', color="black")
+        self.expand_all_button.setIcon(icon)
         
         # force app to process so our sections collapse to the correct size
         QApplication.processEvents()
@@ -389,11 +404,11 @@ class MainWindow(QMainWindow):
         toggle_button.setArrowType(Qt.RightArrow)
         toggle_button.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
 
-        text_edit = QTextEdit()
-        text_edit.setPlainText(feedback)
-        text_edit.setReadOnly(True)
-        text_edit.setMinimumHeight(100)
+        text_edit = QLabel()
+        text_edit.setText(feedback)
+        text_edit.setWordWrap(True)
         text_edit.setVisible(False)
+        text_edit.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
 
         header_layout.addWidget(toggle_button)
         header_frame.setLayout(header_layout)
