@@ -67,6 +67,13 @@ class MainWindow(QMainWindow):
         self.ask_ai_button.clicked.connect(self.process_file)
         layout.addWidget(self.ask_ai_button, 0, 2, 1, 1, Qt.AlignTop)
 
+        # load button
+        self.load_button = QPushButton("Load")
+        self.load_button.setFixedWidth(100)
+        self.load_button.setFixedHeight(50)
+        self.load_button.clicked.connect(self.upload_feedback)
+        layout.addWidget(self.load_button, 0, 3, 1, 1, Qt.AlignTop)
+
         # expand all button
         self.expand_all_button = QPushButton()
         self.expand_all_button.setCheckable(True)
@@ -287,6 +294,34 @@ class MainWindow(QMainWindow):
             # print(self.structured_df)
             aggregate_grades = self.get_aggregate_grades()
             self.display_aggregate_feedback(aggregate_grades)
+            self.display_students()
+
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"An error occurred: {str(e)}")
+
+    def upload_feedback(self):
+        self.upload_file()
+
+        if not self.file_path:
+            QMessageBox.warning(self, "No File", "Please upload a CSV file first.")
+            return
+        
+        try:
+            # Clear previous buttons if refreshing
+            for i in reversed(range(self.student_layout.count())):
+                widget_to_remove = self.student_layout.itemAt(i).widget()
+                if widget_to_remove:
+                    widget_to_remove.setParent(None)
+
+            df = pd.read_csv(self.file_path)
+            # save the df to the app for use with copy buttons
+            self.structured_df = df
+
+            # rerun and display aggregate grades
+            # TODO: save and load csv function for aggregate grades to prevent rerun
+            aggregate_grades = self.get_aggregate_grades()
+            self.display_aggregate_feedback(aggregate_grades)
+
             self.display_students()
 
         except Exception as e:
