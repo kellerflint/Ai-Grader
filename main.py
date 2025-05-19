@@ -347,7 +347,12 @@ class MainWindow(QMainWindow):
         for q_idx in question_indexes:
             question_df = functions.splitDfByQuestion(df_encoded, q_idx)
             csv_string = question_df.to_csv(index=False)
-            ai_output = get_ai_response(csv_string)
+
+            try:
+                ai_output = get_ai_response(csv_string)
+            except RuntimeError as e:
+                QMessageBox.critical(self, "AI Error", f"Failed to get AI feedback:\n{str(e)}")
+                continue 
 
             # split on the '---' lines to get each feedback piece
             blocks = [b.strip() for b in ai_output.split('---') if b.strip()]
@@ -362,14 +367,18 @@ class MainWindow(QMainWindow):
                     feedback_lines = [l for l in lines if not l.startswith(("ID:", "Grade:"))]
                     feedback_text = "\n".join(feedback_lines).strip()
 
-                    student_name = inverted.get(temp_id, temp_id)
+                    # Fix Excel
+                    if feedback_text.startswith(("=", "-", "+", "@")):
+                        feedback_text = "'" + feedback_text
 
+                    student_name = inverted.get(temp_id, temp_id)
                     if not feedback_text.strip():
                         status = "Missing"
                     elif len(feedback_text.split()) < 5:
                         status = "Incomplete"
                     else:
                         status = "Answered"
+
                     rows.append({
                         "Student Name": student_name,
                         "Question ID": df_encoded.columns[q_idx],
@@ -379,6 +388,18 @@ class MainWindow(QMainWindow):
                     })
 
         return pd.DataFrame(rows)
+
+    
+    def sanitize_for_excel(self, text):
+        unwanted_prefixes = ('=', '+', '-', '@')
+        lines = text.splitlines()
+        safe_lines = []
+        for line in lines:
+            if line.strip().startswith(unwanted_prefixes):
+                safe_lines.append("'" + line) 
+            else:
+                safe_lines.append(line)
+        return '\n'.join(safe_lines)
     
     def get_aggregate_grades(self):
         # Filter out rows where feedback is too short

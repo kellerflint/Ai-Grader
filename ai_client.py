@@ -34,7 +34,7 @@ def get_ai_response(user_input: str):
         completions = response.json()
         return completions["choices"][0]["message"]["content"]
     except requests.exceptions.RequestException as error:
-        return f"Error: {error}"
+        return RuntimeError(f"AI request failed: {error}")
 
 
 # Very similar to get_ai_response, except it works with the aggregate function
@@ -62,4 +62,4 @@ def get_ai_response_2(system_prompt, user_prompt: str):
         completions = response.json()
         return completions["choices"][0]["message"]["content"]
     except requests.exceptions.RequestException as error:
-        return f"Error: {error}"
+        return RuntimeError(f"AI request failed: {error}")
