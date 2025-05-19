@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QApplication, QStyle, QWidget, QGridLayout, QToolButton, QScrollArea, QPushButton, QMainWindow, \
     QFileDialog, QMessageBox, QTextEdit, QLabel, QLineEdit, QDialog, QHBoxLayout, QVBoxLayout, QFrame, QSpacerItem, QSizePolicy
 from functools import partial
-from PyQt5.QtGui import QClipboard
+from PyQt5.QtGui import QClipboard, QColor
 from PyQt5.QtCore import Qt
 from pathlib import Path
 import sys
@@ -63,6 +63,7 @@ class MainWindow(QMainWindow):
         self.ask_ai_button.setFixedHeight(50)
         self.ask_ai_button.setToolTip("Upload a file to submit!")
         self.ask_ai_button.setEnabled(False)
+        self.ask_ai_button.setStyleSheet("background-color: lightgray; color: gray;")
         self.ask_ai_button.clicked.connect(self.process_file)
         layout.addWidget(self.ask_ai_button, 0, 2, 1, 1, Qt.AlignTop)
 
@@ -78,9 +79,9 @@ class MainWindow(QMainWindow):
         self.expand_all_button.setCheckable(True)
         self.expand_all_button.setObjectName("expandButton")
         self.expand_all_button.clicked.connect(self.toggle_all_sections)
-        self.ask_ai_button.setEnabled(False)
-        self.expand_all_button.setToolTip("Expand or collapse all")
-        self.expand_all_button.setIcon(qta.icon('fa6s.caret-down'))
+        self.expand_all_button.clicked.disconnect()
+        self.expand_all_button.setToolTip("Cannot expand until information is processed")
+        self.expand_all_button.setIcon(qta.icon('fa6s.caret-down', color='lightgray'))
         
         # faq button
         self.faqButton = QPushButton()
@@ -106,7 +107,14 @@ class MainWindow(QMainWindow):
         # place for feedback
         self.feedback_widget = QWidget()
         self.student_layout = QVBoxLayout(self.feedback_widget)
-        layout.addWidget(self.feedback_widget, 2, 0, 1, 5) 
+        self.feedback_widget.setLayout(self.student_layout)
+
+        # Wrap feedback_widget in a scroll area
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setWidget(self.feedback_widget)
+
+        layout.addWidget(scroll_area, 2, 0, 1, 5)
 
         self.resize(1000, 800)
 
@@ -118,7 +126,14 @@ class MainWindow(QMainWindow):
         if not hasattr(self, 'structured_df') or self.structured_df is None:
             return
 
+        section_label = QLabel("Individual Student Grades")
+        section_label.setStyleSheet("font-weight: bold; font-size: 20px; margin: 10px 0;")
+        self.student_layout.addWidget(section_label)
+
+        self.expand_all_button.clicked.connect(self.toggle_all_sections)
+        self.expand_all_button.setToolTip("Expand all")
         self.expand_all_button.setEnabled(True)
+        self.expand_all_button.setIcon(qta.icon('fa6s.caret-down', color="black"))
 
         grouped = self.structured_df.groupby("Student Name")
         all_questions = self.structured_df["Question ID"].unique()
@@ -162,10 +177,11 @@ class MainWindow(QMainWindow):
             toggle_button.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
 
             # Body (feedback text)
-            body_widget = QTextEdit()
-            body_widget.setReadOnly(True)
-            body_widget.setPlainText(feedback)
+            body_widget = QLabel()
+            body_widget.setText(feedback)
+            body_widget.setWordWrap(True)
             body_widget.setVisible(False)
+            body_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
 
             # Copy button
             copy_button = QToolButton()
@@ -194,10 +210,23 @@ class MainWindow(QMainWindow):
             
     def toggle_all_sections(self):
         expand = self.expand_all_button.isChecked()
-        self.expand_all_button.setText("Collapse All" if expand else "Expand All")
+        self.expand_all_button.setToolTip("Collapse All" if expand else "Expand All")
 
         for toggle_button, body_widget in self.toggle_widgets:
-            toggle_button.setChecked(expand)
+            body_widget.setVisible(expand)
+            toggle_button.setArrowType(Qt.DownArrow if expand else Qt.RightArrow)
+            toggle_button.setChecked(expand)  # Optional: keeps internal state consistent
+
+        # update all the button icons
+        self.expand_all_button.setToolTip("Collapse all" if expand else "Expand all")
+        icon = qta.icon('fa6s.caret-up' if expand else 'fa6s.caret-down', color="black")
+        self.expand_all_button.setIcon(icon)
+        
+        # force app to process so our sections collapse to the correct size
+        QApplication.processEvents()
+
+        self.feedback_widget.adjustSize()
+        self.feedback_widget.updateGeometry()
 
     # add a specified section of text to the clipboard
     def copy_specific_feedback(self, feedback_text):
@@ -214,6 +243,14 @@ class MainWindow(QMainWindow):
             self.ask_ai_button.setEnabled(True)
             self.ask_ai_button.setToolTip("Click to submit file")
             QMessageBox.information(self, "File Uploaded", f"File uploaded successfully: {file_path}")
+
+        # now that we have data, enable the submit button        
+        self.on_file_uploaded()
+
+    def on_file_uploaded(self):
+                self.ask_ai_button.setEnabled(True)
+                self.ask_ai_button.setStyleSheet("")  
+                self.ask_ai_button.setToolTip("Click to submit")
 
     def process_file(self):
         if not self.file_path:
@@ -291,6 +328,7 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, "Error", f"An error occurred: {str(e)}")
 
     def parse_ai_response(self, response):
+
         try:
             parts = response.split('Grade:')
             # everything before “Grade:” is the feedback text
@@ -401,7 +439,15 @@ class MainWindow(QMainWindow):
         v_layout.setContentsMargins(0, 0, 0, 0)
         v_layout.setSpacing(5)
 
+        v_layout
+
+        # create toggle widget for use with this AND with display students
         self.toggle_widgets = []
+
+        header_label = QLabel("Class Summary")
+        header_label.setStyleSheet("font-weight: bold; font-size: 20px; margin: 10px 0;")
+        header_label.setAlignment(Qt.AlignLeft)
+        v_layout.addWidget(header_label)
 
         # header for aggregate data
         header_frame = QFrame()
@@ -409,18 +455,18 @@ class MainWindow(QMainWindow):
         header_layout.setContentsMargins(0, 0, 0, 0)
 
         toggle_button = QToolButton()
-        toggle_button.setText("Class Summary")
+        toggle_button.setText("Aggregate Data")
         toggle_button.setCheckable(True)
         toggle_button.setChecked(False)
         toggle_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         toggle_button.setArrowType(Qt.RightArrow)
         toggle_button.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
 
-        text_edit = QTextEdit()
-        text_edit.setPlainText(feedback)
-        text_edit.setReadOnly(True)
-        text_edit.setMinimumHeight(100)
+        text_edit = QLabel()
+        text_edit.setText(feedback)
+        text_edit.setWordWrap(True)
         text_edit.setVisible(False)
+        text_edit.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
 
         header_layout.addWidget(toggle_button)
         header_frame.setLayout(header_layout)
