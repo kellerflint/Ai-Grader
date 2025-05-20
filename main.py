@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QApplication, QStyle, QWidget, QGridLayout, QToolButton, QScrollArea, QPushButton, \
     QMainWindow, \
     QFileDialog, QMessageBox, QTextEdit, QLabel, QLineEdit, QDialog, QHBoxLayout, QVBoxLayout, QFrame, QSpacerItem, \
-    QSizePolicy, QComboBox
+    QSizePolicy, QComboBox, QDialogButtonBox
 from functools import partial
 from PyQt5.QtGui import QClipboard, QColor
 from PyQt5.QtCore import Qt
@@ -10,6 +10,7 @@ import sys
 import pandas as pd
 from matplotlib.backends.backend_template import FigureCanvas
 from matplotlib.figure import Figure
+from prompt_manager import get_prompt
 
 from ai_client import get_ai_response, get_ai_response_2, set_model, MODEL_OPTIONS
 from api_key_functions import load_api_key, save_api_key
@@ -635,10 +636,19 @@ class SettingsDialog(QDialog):
         self.input_field.setPlaceholderText("Enter new API key")
         layout.addWidget(self.input_field)
 
+        # Add prompt editing button
+        self.prompt_button = QPushButton("Edit Grading Prompt")
+        self.prompt_button.clicked.connect(self.edit_prompt)
+        layout.addWidget(self.prompt_button)
+
         # Save button
         save_button = QPushButton("Save API Key")
         save_button.clicked.connect(self.save_new_api_key)
         layout.addWidget(save_button)
+
+    def edit_prompt(self):
+        dialog = PromptEditorDialog(self)
+        dialog.exec_()
 
     def save_new_api_key(self):
         new_key = self.input_field.text().strip()
@@ -656,6 +666,65 @@ class SettingsDialog(QDialog):
             self.model_display.setText(f"Current Model: {MODEL_OPTIONS[selected_text]}")
         except ValueError as e:
             QMessageBox.warning(self, "Model Error", str(e))
+
+class PromptEditorDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Edit Grading Prompt")
+        
+        layout = QVBoxLayout()
+        self.setLayout(layout)
+
+        # Text edit for prompt
+        self.prompt_edit = QTextEdit()
+        
+        # Get the current prompt 
+        from prompt_manager import get_prompt
+        from default_settings import PROMPT
+        current_prompt = get_prompt("individual")
+        self.prompt_edit.setPlainText(current_prompt)
+        
+        layout.addWidget(self.prompt_edit)
+
+        # Button box
+        button_box = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
+        button_box.accepted.connect(self.save_prompt)
+        button_box.rejected.connect(self.reject)
+        layout.addWidget(button_box)
+
+    def save_prompt(self):
+        new_prompt = self.prompt_edit.toPlainText()
+        if not new_prompt.strip():
+            QMessageBox.warning(self, "Invalid Input", "Prompt cannot be empty.")
+            return
+            
+        # Save the prompt
+        from prompt_manager import save_prompts
+        try:
+            # Load current prompts
+            from prompt_manager import load_prompts
+            prompts = load_prompts()
+            # Update just the individual prompt
+            prompts["individual"] = new_prompt
+            save_prompts(prompts)
+            
+            QMessageBox.information(self, "Success", "Prompt updated successfully.")
+            self.accept()
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to save prompt: {str(e)}")
+
+    def save_prompt(self):
+        new_prompt = self.prompt_edit.toPlainText()
+        if not new_prompt.strip():
+            QMessageBox.warning(self, "Invalid Input", "Prompt cannot be empty.")
+            return
+            
+        # Save the prompt
+        with open('prompt.txt', 'w') as f:
+            f.write(new_prompt)
+        
+        QMessageBox.information(self, "Success", "Prompt updated successfully.")
+        self.accept()
 
 # Run the application
 app = QApplication(sys.argv)
