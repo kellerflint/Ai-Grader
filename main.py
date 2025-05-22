@@ -8,11 +8,13 @@ import sys
 import pandas as pd
 from ai_client import get_ai_response, get_ai_response_2
 from api_key_functions import load_api_key, save_api_key
+from display_functions import HistogramWidget
 from logs import save_df_as_log
 import os
 import functions
 from io import StringIO
 import qtawesome as qta
+
 
 #bundles file pathing that allows exe to work or python command to work
 def resource_path(relative_path):
@@ -46,8 +48,9 @@ class MainWindow(QMainWindow):
         # history menu
         self.history_button = QPushButton()
         self.history_button.setObjectName("historyButton")
-        self.history_button.setIcon(qta.icon('fa6s.bars'))
+        self.history_button.setIcon(qta.icon('fa6s.folder-open'))
         self.history_button.setFixedSize(50, 50)
+        self.history_button.clicked.connect(self.upload_feedback)
         layout.addWidget(self.history_button, 0, 0, Qt.AlignTop)
 
         # upload button
@@ -66,13 +69,6 @@ class MainWindow(QMainWindow):
         self.ask_ai_button.setStyleSheet("background-color: lightgray; color: gray;")
         self.ask_ai_button.clicked.connect(self.process_file)
         layout.addWidget(self.ask_ai_button, 0, 2, 1, 1, Qt.AlignTop)
-
-        # load button
-        self.load_button = QPushButton("Load")
-        self.load_button.setFixedWidth(100)
-        self.load_button.setFixedHeight(50)
-        self.load_button.clicked.connect(self.upload_feedback)
-        layout.addWidget(self.load_button, 0, 3, 1, 1, Qt.AlignTop)
 
         # expand all button
         self.expand_all_button = QPushButton()
@@ -121,6 +117,38 @@ class MainWindow(QMainWindow):
         # Store the file path
         self.file_path = None
 
+    def create_histograms(self, layout, df, column="Grade", bins=10):
+        # Clear any existing histograms
+        for i in reversed(range(layout.count())):
+            widget = layout.itemAt(i).widget()
+            if widget:
+                widget.setParent(None)
+        
+        # Group by Question ID
+        grouped = df.groupby("Question ID")
+        
+        for question_id, group in grouped:
+            # Create a figure and canvas
+            fig = Figure(figsize=(10, 8), dpi=100)
+            canvas = FigureCanvas(fig)
+            ax = fig.add_subplot(111)
+            
+            # Extract grades and plot histogram
+            grades = group[column].dropna()
+            ax.hist(grades, bins=bins, edgecolor='black', alpha=0.7)
+            
+            # Customize the plot
+            ax.set_title(f"Grade Distribution: {question_id.split(':')[0]}")
+            ax.set_xlabel("Grade")
+            ax.set_ylabel("Number of Students")
+            ax.grid(True, alpha=0.3)
+            
+            # Adjust layout
+            fig.tight_layout()
+            
+            # Add to the layout
+            layout.addWidget(canvas)
+    
     def display_students(self):
         # Check dataframe exists
         if not hasattr(self, 'structured_df') or self.structured_df is None:
@@ -480,6 +508,16 @@ class MainWindow(QMainWindow):
             button.setArrowType(Qt.DownArrow if checked else Qt.RightArrow)
 
         toggle_button.toggled.connect(toggle_aggregate_body)
+
+        if hasattr(self, 'structured_df') and not self.structured_df.empty:
+            self.histogram_widget = HistogramWidget()
+            self.histogram_widget.display_histograms(self.structured_df)
+            v_layout.addWidget(self.histogram_widget)
+            self.toggle_widgets.append(
+            (self.histogram_widget.toggle_button, 
+             self.histogram_widget.hist_container)
+        )
+    
 
         self.student_layout.addWidget(container)
 
