@@ -209,7 +209,7 @@ class MainWindow(QMainWindow):
             body_widget.setText(feedback)
             body_widget.setWordWrap(True)
             body_widget.setVisible(False)
-            body_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
+            body_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
 
             # Copy button
             copy_button = QToolButton()
@@ -243,7 +243,11 @@ class MainWindow(QMainWindow):
         for toggle_button, body_widget in self.toggle_widgets:
             body_widget.setVisible(expand)
             toggle_button.setArrowType(Qt.DownArrow if expand else Qt.RightArrow)
-            toggle_button.setChecked(expand)  # Optional: keeps internal state consistent
+            toggle_button.setChecked(expand)
+
+            body_widget.adjustSize()
+            if body_widget.parent():
+                body_widget.parent().adjustSize()  
 
         # update all the button icons
         self.expand_all_button.setToolTip("Collapse all" if expand else "Expand all")
@@ -251,10 +255,13 @@ class MainWindow(QMainWindow):
         self.expand_all_button.setIcon(icon)
         
         # force app to process so our sections collapse to the correct size
-        QApplication.processEvents()
-
-        self.feedback_widget.adjustSize()
+        # Force layout update
         self.feedback_widget.updateGeometry()
+        self.feedback_widget.adjustSize()
+        
+        # Process events and ensure proper sizing
+        QApplication.processEvents()
+        self.centralWidget().updateGeometry()
 
     # add a specified section of text to the clipboard
     def copy_specific_feedback(self, feedback_text):
