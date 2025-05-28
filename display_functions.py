@@ -19,10 +19,10 @@ class HistogramWidget(QWidget):
         header_layout.setContentsMargins(0, 0, 0, 0)
         
         self.toggle_button = QToolButton()
-        self.toggle_button.setText("Grade Distributions")
+        self.toggle_button.setText("Aggregate Data Graphs")
         self.toggle_button.setCheckable(True)
-        self.toggle_button.setChecked(True)
-        self.toggle_button.setArrowType(Qt.DownArrow)
+        self.toggle_button.setChecked(False)
+        self.toggle_button.setArrowType(Qt.RightArrow)
         self.toggle_button.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
         self.toggle_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         
@@ -34,6 +34,7 @@ class HistogramWidget(QWidget):
         self.hist_container = QWidget()
         self.hist_layout = QVBoxLayout(self.hist_container)
         self.hist_layout.setContentsMargins(0, 0, 0, 0)
+        self.hist_container.setVisible(False)
         self.layout.addWidget(self.hist_container)
         
         # Connect toggle
