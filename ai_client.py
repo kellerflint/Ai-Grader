@@ -1,8 +1,12 @@
 import json, os
+from pathlib import Path
+
 import default_settings as default
 import requests
-from dotenv import load_dotenv
+from dotenv import load_dotenv, set_key
 from api_key_functions import get_api_key
+
+load_dotenv(dotenv_path="config.env")
 MODEL_OPTIONS = {
     "LLaMA 3.3 8B (Free)": "meta-llama/llama-3.3-8b-instruct:free",
     "LLaMA 3 70B (Free)": "meta-llama/llama-3-70b-instruct:free",
@@ -11,14 +15,21 @@ MODEL_OPTIONS = {
     "Gemma 7B (Free)": "google/gemma-7b-it:free",
     "OpenChat 3.5 (Free)": "openchat/openchat-3.5-0106:free"
 }
-def set_model(choice_label: str):
-    global model
-    if choice_label in MODEL_OPTIONS:
-        model = MODEL_OPTIONS[choice_label]
-    else:
-        raise ValueError(f"Model '{choice_label}' not found.")
+def get_model_from_label(label):
+    return MODEL_OPTIONS.get(label, MODEL_OPTIONS["LLaMA 3.3 8B (Free)"])
 
-model =  MODEL_OPTIONS["LLaMA 3.3 8B (Free)"]
+
+def set_model(label):
+    model_id = get_model_from_label(label)
+    if not model_id:
+        raise ValueError("Invalid model label.")
+    env_path = Path("config.env")
+    set_key(env_path, "DEFAULT_MODEL", label)
+    global model
+    model = model_id
+
+selected_label = os.getenv("DEFAULT_MODEL", "LLaMA 3.3 8B (Free)")
+model = get_model_from_label(selected_label)
 # Returns an ai client object
 def ai_client():
     api_key=get_api_key()

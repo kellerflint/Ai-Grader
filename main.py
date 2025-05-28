@@ -11,7 +11,7 @@ import pandas as pd
 from matplotlib.backends.backend_template import FigureCanvas
 from matplotlib.figure import Figure
 
-from ai_client import get_ai_response, get_ai_response_2
+from ai_client import get_ai_response, get_ai_response_2, set_model, MODEL_OPTIONS
 from api_key_functions import load_api_key, save_api_key
 from display_histograms import HistogramWidget
 from logs import save_df_as_log
@@ -45,6 +45,8 @@ class MainWindow(QMainWindow):
 
         # Layout for widget
         layout = QGridLayout()
+        self.model_display = QLabel()
+        layout.addWidget(self.model_display)
         central_widget.setLayout(layout)
 
         # Create and align the buttons
@@ -569,7 +571,6 @@ class MainWindow(QMainWindow):
         dialog = SettingsDialog(self)
         dialog.exec_()
 
-        print("click")
 
 
 
@@ -598,11 +599,15 @@ class SettingsDialog(QDialog):
             "Gemma 7B (Free)",
             "OpenChat 3.5 (Free)"
         ])
-        self.model_selector.setCurrentText("LLaMA 3.3 8B (Free)")
-        self.model_selector.currentTextChanged.connect(self.update_model_selection)
+        current_label = os.getenv("DEFAULT_MODEL", "LLaMA 3.3 8B (Free)")
+        self.model_selector.setCurrentText(current_label)
+        self.model_display = QLabel()
+        layout.addWidget(self.model_display)
+        self.model_display.setText(f"Current Model: {MODEL_OPTIONS[current_label]}")
         layout.addWidget(QLabel("Select Model:"))
         layout.addWidget(self.model_selector)
 
+        self.model_selector.currentTextChanged.connect(self.update_model_selection)
 
         # Input field for new API key
         self.input_field = QLineEdit()
@@ -625,7 +630,12 @@ class SettingsDialog(QDialog):
         self.input_field.clear()
 
     def update_model_selection(self, selected_text):
-        pass
+        try:
+            set_model(selected_text)
+            self.model_display.setText(f"Current Model: {MODEL_OPTIONS[selected_text]}")
+        except ValueError as e:
+            QMessageBox.warning(self, "Model Error", str(e))
+
 # Run the application
 app = QApplication(sys.argv)
 
