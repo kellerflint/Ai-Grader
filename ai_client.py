@@ -3,7 +3,22 @@ import default_settings as default
 import requests
 from dotenv import load_dotenv
 from api_key_functions import get_api_key
-model = os.getenv("OPENROUTER_MODEL","meta-llama/llama-3-70b-instruct")
+MODEL_OPTIONS = {
+    "LLaMA 3.3 8B (Free)": "meta-llama/llama-3.3-8b-instruct:free",
+    "LLaMA 3 70B (Free)": "meta-llama/llama-3-70b-instruct:free",
+    "Mixtral 8x7B (Free)": "mistral/mixtral-8x7b-instruct:free",
+    "Claude 3 Haiku (Free)": "anthropic/claude-3-haiku:free",
+    "Gemma 7B (Free)": "google/gemma-7b-it:free",
+    "OpenChat 3.5 (Free)": "openchat/openchat-3.5-0106:free"
+}
+def set_model(choice_label: str):
+    global model
+    if choice_label in MODEL_OPTIONS:
+        model = MODEL_OPTIONS[choice_label]
+    else:
+        raise ValueError(f"Model '{choice_label}' not found.")
+
+model =  MODEL_OPTIONS["LLaMA 3.3 8B (Free)"]
 # Returns an ai client object
 def ai_client():
     api_key=get_api_key()
