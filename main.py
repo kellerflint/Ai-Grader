@@ -8,7 +8,7 @@ import sys
 import pandas as pd
 from ai_client import get_ai_response, get_ai_response_2
 from api_key_functions import load_api_key, save_api_key
-from display_functions import HistogramWidget
+from display_histograms import HistogramWidget
 from logs import save_df_as_log
 import os
 import functions
@@ -383,6 +383,14 @@ class MainWindow(QMainWindow):
             question_df = functions.splitDfByQuestion(df_encoded, q_idx)
             csv_string = question_df.to_csv(index=False)
 
+            question_id_full = df_encoded.columns[q_idx]
+
+            if "\n" in question_id_full:
+                question_id, question_text = question_id_full.split("\n", 1)
+            else:
+                question_id = question_id_full
+                question_text = question_id_full
+
             try:
                 ai_output = get_ai_response(csv_string)
             except RuntimeError as e:
@@ -416,7 +424,8 @@ class MainWindow(QMainWindow):
 
                     rows.append({
                         "Student Name": student_name,
-                        "Question ID": df_encoded.columns[q_idx],
+                        "Question ID": question_id.strip(),
+                    "Question Text": question_text.strip(),
                         "Grade": grade,
                         "Feedback": feedback_text,
                         "Status": status
