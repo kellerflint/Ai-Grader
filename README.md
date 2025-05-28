@@ -14,7 +14,7 @@ This project uses AI to process a CSV file through a desktop application and ret
 Make sure you have the following Python packages installed:
 
 ```bash
-pip install pyqt5 groq pandas python-dotenv QtAwesome
+pip install pyqt5 groq pandas python-dotenv QtAwesome matplotlib
 ```
 
 ## Running the Application
@@ -24,7 +24,7 @@ To run the application in VSCode:
 Install the necessary dependencies:
 
 ```bash
-pip install pyqt5 groq pandas python-dotenv
+pip install pyqt5 groq pandas python-dotenv pyqtgraph
 ```
 
 Run the application:
