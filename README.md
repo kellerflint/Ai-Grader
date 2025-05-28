@@ -37,6 +37,11 @@ Setting Up API Key
 
 Create a config.env file following the guidelines in the example.env file and insert your personal API key.
 
+In the same config.env file paste
+
+DEFAULT_MODEL='LLaMA 3.3 8B (Free)'
+
+
 ## Creating the Executable
 
 If you're using PyCharm or VsCode and want to create an executable file, follow these steps:
