@@ -1,11 +1,16 @@
-from PyQt5.QtWidgets import QApplication, QStyle, QWidget, QGridLayout, QToolButton, QScrollArea, QPushButton, QMainWindow, \
-    QFileDialog, QMessageBox, QTextEdit, QLabel, QLineEdit, QDialog, QHBoxLayout, QVBoxLayout, QFrame, QSpacerItem, QSizePolicy
+from PyQt5.QtWidgets import QApplication, QStyle, QWidget, QGridLayout, QToolButton, QScrollArea, QPushButton, \
+    QMainWindow, \
+    QFileDialog, QMessageBox, QTextEdit, QLabel, QLineEdit, QDialog, QHBoxLayout, QVBoxLayout, QFrame, QSpacerItem, \
+    QSizePolicy, QComboBox
 from functools import partial
 from PyQt5.QtGui import QClipboard, QColor
 from PyQt5.QtCore import Qt
 from pathlib import Path
 import sys
 import pandas as pd
+from matplotlib.backends.backend_template import FigureCanvas
+from matplotlib.figure import Figure
+
 from ai_client import get_ai_response, get_ai_response_2
 from api_key_functions import load_api_key, save_api_key
 from display_histograms import HistogramWidget
@@ -584,6 +589,21 @@ class SettingsDialog(QDialog):
         self.current_key_label = QLabel(f"Current API Key: {load_api_key() or 'Not set'}")
         layout.addWidget(self.current_key_label)
 
+        self.model_selector = QComboBox()
+        self.model_selector.addItems([
+            "LLaMA 3.3 8B (Free)",
+            "LLaMA 3 70B (Free)",
+            "Mixtral 8x7B (Free)",
+            "Claude 3 Haiku (Free)",
+            "Gemma 7B (Free)",
+            "OpenChat 3.5 (Free)"
+        ])
+        self.model_selector.setCurrentText("LLaMA 3.3 8B (Free)")
+        self.model_selector.currentTextChanged.connect(self.update_model_selection)
+        layout.addWidget(QLabel("Select Model:"))
+        layout.addWidget(self.model_selector)
+
+
         # Input field for new API key
         self.input_field = QLineEdit()
         self.input_field.setPlaceholderText("Enter new API key")
@@ -604,6 +624,8 @@ class SettingsDialog(QDialog):
         self.current_key_label.setText(f"Current API Key: {new_key}")
         self.input_field.clear()
 
+    def update_model_selection(self, selected_text):
+        pass
 # Run the application
 app = QApplication(sys.argv)
 
