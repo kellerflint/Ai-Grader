@@ -14,7 +14,7 @@ from matplotlib.figure import Figure
 from ai_client import get_ai_response, get_ai_response_2, set_model, MODEL_OPTIONS
 from api_key_functions import load_api_key, save_api_key
 from display_histograms import HistogramWidget
-from logs import save_df_as_log
+from logs import save_df_as_log, save_text_as_log
 import os
 import functions
 from io import StringIO
@@ -324,7 +324,7 @@ class MainWindow(QMainWindow):
                 "structured_feedback.csv"
             )
             structured_df.to_csv(structured_path, index=False)
-            save_df_as_log(structured_df)
+            timestamp = save_df_as_log(structured_df)
             QMessageBox.information(
                 self,
                 "Structured Export",
@@ -335,6 +335,11 @@ class MainWindow(QMainWindow):
             self.structured_df = structured_df  
             # print(self.structured_df)
             aggregate_grades = self.get_aggregate_grades()
+
+            #save aggregate grades
+            save_text_as_log(aggregate_grades, timestamp)
+
+            #display aggregate grades
             self.display_aggregate_feedback(aggregate_grades)
             self.display_students()
 
