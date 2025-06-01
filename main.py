@@ -14,7 +14,7 @@ from matplotlib.figure import Figure
 from ai_client import get_ai_response, get_ai_response_2, set_model, MODEL_OPTIONS
 from api_key_functions import load_api_key, save_api_key
 from display_histograms import HistogramWidget
-from logs import save_df_as_log
+from logs import save_df_as_log, save_text_as_log, get_log_dir
 import os
 import functions
 from io import StringIO
@@ -324,7 +324,7 @@ class MainWindow(QMainWindow):
                 "structured_feedback.csv"
             )
             structured_df.to_csv(structured_path, index=False)
-            save_df_as_log(structured_df)
+            timestamp = save_df_as_log(structured_df)
             QMessageBox.information(
                 self,
                 "Structured Export",
@@ -335,6 +335,11 @@ class MainWindow(QMainWindow):
             self.structured_df = structured_df  
             # print(self.structured_df)
             aggregate_grades = self.get_aggregate_grades()
+
+            #save aggregate grades
+            save_text_as_log(aggregate_grades, timestamp)
+
+            #display aggregate grades
             self.display_aggregate_feedback(aggregate_grades)
             self.display_students()
 
@@ -359,11 +364,21 @@ class MainWindow(QMainWindow):
             # save the df to the app for use with copy buttons
             self.structured_df = df
 
-            # rerun and display aggregate grades
-            # TODO: save and load csv function for aggregate grades to prevent rerun
-            aggregate_grades = self.get_aggregate_grades()
+            individual_feedback_file_name = os.path.splitext(os.path.basename(self.file_path))[0]
+            aggregate_feedback_file_path = get_log_dir("aggregate")
+            aggregate_feedback_file_path = os.path.join(aggregate_feedback_file_path, f"{individual_feedback_file_name}.txt")
+            
+            aggregate_grades = ""
+            try:
+                with open(aggregate_feedback_file_path, 'r', encoding='utf-8') as file:
+                    aggregate_grades = file.read()
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"An error occurred: {str(e)}")
+                if not os.path.exists(aggregate_feedback_file_path):
+                    # rerun aggregate grades
+                    aggregate_grades = "[Re-Submitted] " + self.get_aggregate_grades()
+            
             self.display_aggregate_feedback(aggregate_grades)
-
             self.display_students()
 
         except Exception as e:
