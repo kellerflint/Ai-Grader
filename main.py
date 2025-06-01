@@ -121,8 +121,9 @@ class MainWindow(QMainWindow):
 
         self.resize(1000, 800)
 
-        # Store the file path
+        # Store file paths
         self.file_path = None
+        self.log_file_path = None
 
     def create_histograms(self, layout, df, column="Grade", bins=10):
         # Clear any existing histograms
@@ -347,11 +348,16 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, "Error", f"An error occurred: {str(e)}")
 
     def upload_feedback(self):
-        self.upload_file()
+        # Open a file dialog to select a CSV file
+        log_dir = get_log_dir("individual")
+        file_dialog = QFileDialog()
+        file_path, _ = file_dialog.getOpenFileName(self, "Open CSV File", log_dir, "CSV Files (*.csv)")
 
-        if not self.file_path:
+        if file_path:
+            self.log_file_path = file_path
+            QMessageBox.information(self, "File Uploaded", f"File uploaded successfully: {file_path}")
+        else:
             QMessageBox.warning(self, "No File", "Please upload a CSV file first.")
-            return
         
         try:
             # Clear previous buttons if refreshing
@@ -360,11 +366,11 @@ class MainWindow(QMainWindow):
                 if widget_to_remove:
                     widget_to_remove.setParent(None)
 
-            df = pd.read_csv(self.file_path)
+            df = pd.read_csv(self.log_file_path)
             # save the df to the app for use with copy buttons
             self.structured_df = df
 
-            individual_feedback_file_name = os.path.splitext(os.path.basename(self.file_path))[0]
+            individual_feedback_file_name = os.path.splitext(os.path.basename(self.log_file_path))[0]
             aggregate_feedback_file_path = get_log_dir("aggregate")
             aggregate_feedback_file_path = os.path.join(aggregate_feedback_file_path, f"{individual_feedback_file_name}.txt")
             
