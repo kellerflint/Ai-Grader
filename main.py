@@ -644,12 +644,21 @@ class SettingsDialog(QDialog):
 
         self.prompt_name_input.clear()
         self.prompt_edit.clear()
+        #Remember the name of the prompt just saved
+        saved_name = prompt_name
+
         self.load_prompts_into_dropdown()
+
+        #Reselect the saved prompt
+        index = self.prompt_dropdown.findText(saved_name)
+        if index != -1:
+            self.prompt_dropdown.setCurrentIndex(index)
+            self.on_prompt_selected(index)
 
 
     def load_prompts_into_dropdown(self):
         from default_settings import PROMPT as default_prompt
-        
+
         try:
             self.prompt_dropdown.currentIndexChanged.disconnect()
         except TypeError:
@@ -672,6 +681,9 @@ class SettingsDialog(QDialog):
             self.prompt_dropdown.addItem(name)
 
         self.prompt_dropdown.currentIndexChanged.connect(self.on_prompt_selected)
+         #Force default to be selected and populated
+        self.prompt_dropdown.setCurrentIndex(0)
+        self.on_prompt_selected(0)
 
     def on_prompt_selected(self, index):
         if index >= 0:
@@ -717,7 +729,14 @@ class SettingsDialog(QDialog):
         print(updated_content or "[No prompt selected — will use default PROMPT]")
 
         QMessageBox.information(self, "Success", f"Prompt '{name}' updated and applied.")
+
+        updated_name = name
         self.load_prompts_into_dropdown()
+
+        index = self.prompt_dropdown.findText(updated_name)
+        if index != -1:
+            self.prompt_dropdown.setCurrentIndex(index)
+            self.on_prompt_selected(index)
 
         #Aggregate prompt functions
     def load_aggregate_prompts_into_dropdown(self):
@@ -743,6 +762,10 @@ class SettingsDialog(QDialog):
 
         self.aggregate_prompt_dropdown.currentIndexChanged.connect(self.on_aggregate_prompt_selected)
 
+        #Force default to be selected and populated
+        self.aggregate_prompt_dropdown.setCurrentIndex(0)
+        self.on_aggregate_prompt_selected(0)
+
     def save_aggregate_prompt_template(self):
         name = self.aggregate_name_input.text().strip()
         content = self.aggregate_prompt_edit.toPlainText().strip()
@@ -757,7 +780,13 @@ class SettingsDialog(QDialog):
 
         self.aggregate_name_input.clear()
         self.aggregate_prompt_edit.clear()
+        saved_name = name
         self.load_aggregate_prompts_into_dropdown()
+
+        index = self.aggregate_prompt_dropdown.findText(saved_name)
+        if index != -1:
+            self.aggregate_prompt_dropdown.setCurrentIndex(index)
+            self.on_aggregate_prompt_selected(index)
 
     def update_aggregate_prompt(self):
         name = self.aggregate_prompt_dropdown.currentText()
@@ -782,7 +811,13 @@ class SettingsDialog(QDialog):
         print(content or "[No prompt selected — will use default aggregate prompt]")    
 
         QMessageBox.information(self, "Updated", f"Aggregate prompt '{name}' updated and applied.")
+        updated_name = name
         self.load_aggregate_prompts_into_dropdown()
+
+        index = self.aggregate_prompt_dropdown.findText(updated_name)
+        if index != -1:
+            self.aggregate_prompt_dropdown.setCurrentIndex(index)
+            self.on_aggregate_prompt_selected(index)
 
     def on_aggregate_prompt_selected(self, index):
         if index >= 0:
