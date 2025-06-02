@@ -538,12 +538,12 @@ class SettingsDialog(QDialog):
         #layout.setContentsMargins(20, 30, 20, 20)
 
         # Current API Key display
-        self.current_key_label = QLabel(f"Current API Key: {load_api_key() or 'Not set'}")
+        self.current_key_label = QLabel(f"Current OpenRouter API Key: {load_api_key() or 'Not set'}")
         layout.addWidget(self.current_key_label)
 
         # Input field for new API key
         self.input_field = QLineEdit()
-        self.input_field.setPlaceholderText("Enter new API key")
+        self.input_field.setPlaceholderText("Enter new OpenRouter API key")
         layout.addWidget(self.input_field)
 
         # Save button
