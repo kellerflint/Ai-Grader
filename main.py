@@ -706,6 +706,14 @@ class SettingsDialog(QDialog):
     def update_selected_prompt(self):
         name = self.prompt_dropdown.currentText()
         updated_content = self.prompt_edit.toPlainText().strip()
+
+         #Prevent saving the default prompt
+        if name == "[Default Prompt]":
+            if isinstance(self.parent(), QMainWindow):
+                self.parent().set_individual_prompt(None)
+            QMessageBox.information(self, "Default Selected", "Default prompt is now active. It will not be saved.")
+            return
+
         if not name:
             QMessageBox.warning(self, "No Selection", "Please select a prompt to update.")
             return
@@ -791,6 +799,13 @@ class SettingsDialog(QDialog):
     def update_aggregate_prompt(self):
         name = self.aggregate_prompt_dropdown.currentText()
         content = self.aggregate_prompt_edit.toPlainText().strip()
+
+        #Prevent saving the default aggregate prompt
+        if name == "[Default Aggregate Prompt]":
+            if isinstance(self.parent(), QMainWindow):
+                self.parent().set_aggregate_prompt(None)
+            QMessageBox.information(self, "Default Selected", "Default aggregate prompt is now active. It will not be saved.")
+            return    
 
         if not name:
             QMessageBox.warning(self, "No Selection", "Please select a prompt to update.")
