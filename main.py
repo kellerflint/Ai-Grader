@@ -568,12 +568,12 @@ class SettingsDialog(QDialog):
         layout.addWidget(self.prompt_edit, 5, 0, 1, 2)
 
         # Save button for prompt input
-        save_prompt_button = QPushButton("Save Prompt Template")
+        save_prompt_button = QPushButton("Save Individual Prompt")
         save_prompt_button.clicked.connect(self.save_prompt_template)
         layout.addWidget(save_prompt_button, 6, 0, 1, 2)
 
         # Dropdown for existing saved prompts (read-only list)
-        dropdown_name_label = QLabel("Individual Custom Prompt Name:")
+        dropdown_name_label = QLabel("Select Individual Custom Prompt:")
         layout.addWidget(dropdown_name_label, 7, 0, 1, 2)
         self.prompt_dropdown = QComboBox()
         self.prompt_dropdown.setPlaceholderText("Saved Prompts")
@@ -583,8 +583,8 @@ class SettingsDialog(QDialog):
         self.load_prompts_into_dropdown()
 
         # Red "Update Prompt" button
-        update_prompt_button = QPushButton("Update Prompt")
-        update_prompt_button.setStyleSheet("background-color: red; color: white;")
+        update_prompt_button = QPushButton("Update Individual Prompt")
+        update_prompt_button.setStyleSheet("background-color: blue; color: white;")
         layout.addWidget(update_prompt_button, 9, 0, 1, 2)
         update_prompt_button.clicked.connect(self.update_selected_prompt)
 
@@ -605,14 +605,18 @@ class SettingsDialog(QDialog):
         save_agg_button.clicked.connect(self.save_aggregate_prompt_template)
         layout.addWidget(save_agg_button, 13, 0, 1, 2)
 
+        aggregate_dropdown_name_label = QLabel("Select Aggregate Custom Prompt:")
+        layout.addWidget(aggregate_dropdown_name_label, 14, 0, 1, 2)
         self.aggregate_prompt_dropdown = QComboBox()
         self.aggregate_prompt_dropdown.setPlaceholderText("Saved Aggregate Prompts")
-        layout.addWidget(self.aggregate_prompt_dropdown, 14, 0, 1, 2)
+        layout.addWidget(self.aggregate_prompt_dropdown, 15, 0, 1, 2)
 
         update_agg_button = QPushButton("Update Aggregate Prompt")
-        update_agg_button.setStyleSheet("background-color: red; color: white;")
+        update_agg_button.setStyleSheet("background-color: blue; color: white;")
         update_agg_button.clicked.connect(self.update_aggregate_prompt)
-        layout.addWidget(update_agg_button, 15, 0, 1, 2)
+        layout.addWidget(update_agg_button, 16, 0, 1, 2)
+
+        self.load_aggregate_prompts_into_dropdown()
 
     def save_new_api_key(self):
         new_key = self.input_field.text().strip()
@@ -645,6 +649,11 @@ class SettingsDialog(QDialog):
 
     def load_prompts_into_dropdown(self):
         from default_settings import PROMPT as default_prompt
+        
+        try:
+            self.prompt_dropdown.currentIndexChanged.disconnect()
+        except TypeError:
+            pass
 
         self.prompt_dropdown.clear()
         self.prompt_map = {}
@@ -712,6 +721,11 @@ class SettingsDialog(QDialog):
 
         #Aggregate prompt functions
     def load_aggregate_prompts_into_dropdown(self):
+        try:
+            self.aggregate_prompt_dropdown.currentIndexChanged.disconnect()
+        except TypeError:
+            pass  # It wasn’t connected yet
+
         self.aggregate_prompt_dropdown.clear()
         self.aggregate_prompt_map = {}
 
@@ -781,8 +795,8 @@ class SettingsDialog(QDialog):
                     self.parent().set_aggregate_prompt(None)
                 else:
                     self.parent().set_aggregate_prompt(content)
-        # Print prompt name and content for validation
-        print(f"[Prompt Selected] Now using AGGREGATE prompt: {name}")
+            # Print prompt name and content for validation
+            print(f"[Prompt Selected] Now using AGGREGATE prompt: {name}")
 
 # Run the application
 app = QApplication(sys.argv)

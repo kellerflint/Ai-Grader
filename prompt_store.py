@@ -52,5 +52,7 @@ def save_aggregate_prompt(new_prompt):
 def load_aggregate_prompts():
     if os.path.exists(AGGREGATE_PROMPT_FILE):
         with open(AGGREGATE_PROMPT_FILE, "r") as f:
-            return json.load(f)
+            data = json.load(f)
+            print("[DEBUG] loaded aggregate prompts: ", data)
+            return data
     return []
