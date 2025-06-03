@@ -1,14 +1,20 @@
-from PyQt5.QtWidgets import QApplication, QStyle, QWidget, QGridLayout, QToolButton, QScrollArea, QPushButton, QMainWindow, \
-    QFileDialog, QMessageBox, QTextEdit, QLabel, QLineEdit, QDialog, QHBoxLayout, QVBoxLayout, QFrame, QSpacerItem, QSizePolicy
+from PyQt5.QtWidgets import QApplication, QStyle, QWidget, QGridLayout, QToolButton, QScrollArea, QPushButton, \
+    QMainWindow, \
+    QFileDialog, QMessageBox, QTextEdit, QLabel, QLineEdit, QDialog, QHBoxLayout, QVBoxLayout, QFrame, QSpacerItem, \
+    QSizePolicy, QComboBox
 from functools import partial
 from PyQt5.QtGui import QClipboard, QColor
 from PyQt5.QtCore import Qt
 from pathlib import Path
 import sys
 import pandas as pd
-from ai_client import get_ai_response, get_ai_response_2
+from matplotlib.backends.backend_template import FigureCanvas
+from matplotlib.figure import Figure
+
+from ai_client import get_ai_response, get_ai_response_2, set_model, MODEL_OPTIONS
 from api_key_functions import load_api_key, save_api_key
-from logs import save_df_as_log
+from display_histograms import HistogramWidget
+from logs import save_df_as_log, save_text_as_log, get_log_dir
 import os
 import functions
 from io import StringIO
@@ -16,6 +22,7 @@ import qtawesome as qta
 from prompt_store import save_prompt, load_prompts, save_aggregate_prompt, load_aggregate_prompts
 from PyQt5.QtWidgets import QComboBox
 from default_settings import AGGREGATE_PROMPT
+
 
 #bundles file pathing that allows exe to work or python command to work
 def resource_path(relative_path):
@@ -41,6 +48,8 @@ class MainWindow(QMainWindow):
 
         # Layout for widget
         layout = QGridLayout()
+        self.model_display = QLabel()
+        layout.addWidget(self.model_display)
         central_widget.setLayout(layout)
 
         # Create and align the buttons
@@ -49,8 +58,9 @@ class MainWindow(QMainWindow):
         # history menu
         self.history_button = QPushButton()
         self.history_button.setObjectName("historyButton")
-        self.history_button.setIcon(qta.icon('fa6s.bars'))
+        self.history_button.setIcon(qta.icon('fa6s.folder-open'))
         self.history_button.setFixedSize(50, 50)
+        self.history_button.clicked.connect(self.upload_feedback)
         layout.addWidget(self.history_button, 0, 0, Qt.AlignTop)
 
         # upload button
@@ -69,13 +79,6 @@ class MainWindow(QMainWindow):
         self.ask_ai_button.setStyleSheet("background-color: lightgray; color: gray;")
         self.ask_ai_button.clicked.connect(self.process_file)
         layout.addWidget(self.ask_ai_button, 0, 2, 1, 1, Qt.AlignTop)
-
-        # load button
-        self.load_button = QPushButton("Load")
-        self.load_button.setFixedWidth(100)
-        self.load_button.setFixedHeight(50)
-        self.load_button.clicked.connect(self.upload_feedback)
-        layout.addWidget(self.load_button, 0, 3, 1, 1, Qt.AlignTop)
 
         # expand all button
         self.expand_all_button = QPushButton()
@@ -121,8 +124,9 @@ class MainWindow(QMainWindow):
 
         self.resize(1000, 800)
 
-        # Store the file path
+        # Store file paths
         self.file_path = None
+
 
         # Holds the latest user-defined individual grading prompt
         self.individual_prompt = None  
@@ -138,6 +142,41 @@ class MainWindow(QMainWindow):
     def set_aggregate_prompt(self, prompt_text):
         self.aggregate_prompt = prompt_text    
 
+
+        self.log_file_path = None
+
+    def create_histograms(self, layout, df, column="Grade", bins=10):
+        # Clear any existing histograms
+        for i in reversed(range(layout.count())):
+            widget = layout.itemAt(i).widget()
+            if widget:
+                widget.setParent(None)
+        
+        # Group by Question ID
+        grouped = df.groupby("Question ID")
+        
+        for question_id, group in grouped:
+            # Create a figure and canvas
+            fig = Figure(figsize=(10, 8), dpi=100)
+            canvas = FigureCanvas(fig)
+            ax = fig.add_subplot(111)
+            
+            # Extract grades and plot histogram
+            grades = group[column].dropna()
+            ax.hist(grades, bins=bins, edgecolor='black', alpha=0.7)
+            
+            # Customize the plot
+            ax.set_title(f"Grade Distribution: {question_id.split(':')[0]}")
+            ax.set_xlabel("Grade")
+            ax.set_ylabel("Number of Students")
+            ax.grid(True, alpha=0.3)
+            
+            # Adjust layout
+            fig.tight_layout()
+            
+            # Add to the layout
+            layout.addWidget(canvas)
+    
 
     def display_students(self):
         # Check dataframe exists
@@ -199,7 +238,7 @@ class MainWindow(QMainWindow):
             body_widget.setText(feedback)
             body_widget.setWordWrap(True)
             body_widget.setVisible(False)
-            body_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
+            body_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
 
             # Copy button
             copy_button = QToolButton()
@@ -233,7 +272,11 @@ class MainWindow(QMainWindow):
         for toggle_button, body_widget in self.toggle_widgets:
             body_widget.setVisible(expand)
             toggle_button.setArrowType(Qt.DownArrow if expand else Qt.RightArrow)
-            toggle_button.setChecked(expand)  # Optional: keeps internal state consistent
+            toggle_button.setChecked(expand)
+
+            body_widget.adjustSize()
+            if body_widget.parent():
+                body_widget.parent().adjustSize()  
 
         # update all the button icons
         self.expand_all_button.setToolTip("Collapse all" if expand else "Expand all")
@@ -241,10 +284,13 @@ class MainWindow(QMainWindow):
         self.expand_all_button.setIcon(icon)
         
         # force app to process so our sections collapse to the correct size
-        QApplication.processEvents()
-
-        self.feedback_widget.adjustSize()
+        # Force layout update
         self.feedback_widget.updateGeometry()
+        self.feedback_widget.adjustSize()
+        
+        # Process events and ensure proper sizing
+        QApplication.processEvents()
+        self.centralWidget().updateGeometry()
 
     # add a specified section of text to the clipboard
     def copy_specific_feedback(self, feedback_text):
@@ -300,7 +346,7 @@ class MainWindow(QMainWindow):
                 "structured_feedback.csv"
             )
             structured_df.to_csv(structured_path, index=False)
-            save_df_as_log(structured_df)
+            timestamp = save_df_as_log(structured_df)
             QMessageBox.information(
                 self,
                 "Structured Export",
@@ -311,6 +357,11 @@ class MainWindow(QMainWindow):
             self.structured_df = structured_df  
             # print(self.structured_df)
             aggregate_grades = self.get_aggregate_grades()
+
+            #save aggregate grades
+            save_text_as_log(aggregate_grades, timestamp)
+
+            #display aggregate grades
             self.display_aggregate_feedback(aggregate_grades)
             self.display_students()
 
@@ -318,11 +369,16 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, "Error", f"An error occurred: {str(e)}")
 
     def upload_feedback(self):
-        self.upload_file()
+        # Open a file dialog to select a CSV file
+        log_dir = get_log_dir("individual")
+        file_dialog = QFileDialog()
+        file_path, _ = file_dialog.getOpenFileName(self, "Open CSV File", log_dir, "CSV Files (*.csv)")
 
-        if not self.file_path:
+        if file_path:
+            self.log_file_path = file_path
+            QMessageBox.information(self, "File Uploaded", f"File uploaded successfully: {file_path}")
+        else:
             QMessageBox.warning(self, "No File", "Please upload a CSV file first.")
-            return
         
         try:
             # Clear previous buttons if refreshing
@@ -331,15 +387,25 @@ class MainWindow(QMainWindow):
                 if widget_to_remove:
                     widget_to_remove.setParent(None)
 
-            df = pd.read_csv(self.file_path)
+            df = pd.read_csv(self.log_file_path)
             # save the df to the app for use with copy buttons
             self.structured_df = df
 
-            # rerun and display aggregate grades
-            # TODO: save and load csv function for aggregate grades to prevent rerun
-            aggregate_grades = self.get_aggregate_grades()
+            individual_feedback_file_name = os.path.splitext(os.path.basename(self.log_file_path))[0]
+            aggregate_feedback_file_path = get_log_dir("aggregate")
+            aggregate_feedback_file_path = os.path.join(aggregate_feedback_file_path, f"{individual_feedback_file_name}.txt")
+            
+            aggregate_grades = ""
+            try:
+                with open(aggregate_feedback_file_path, 'r', encoding='utf-8') as file:
+                    aggregate_grades = file.read()
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"An error occurred: {str(e)}")
+                if not os.path.exists(aggregate_feedback_file_path):
+                    # rerun aggregate grades
+                    aggregate_grades = "[Re-Submitted] " + self.get_aggregate_grades()
+            
             self.display_aggregate_feedback(aggregate_grades)
-
             self.display_students()
 
         except Exception as e:
@@ -365,6 +431,14 @@ class MainWindow(QMainWindow):
         for q_idx in question_indexes:
             question_df = functions.splitDfByQuestion(df_encoded, q_idx)
             csv_string = question_df.to_csv(index=False)
+
+            question_id_full = df_encoded.columns[q_idx]
+
+            if "\n" in question_id_full:
+                question_id, question_text = question_id_full.split("\n", 1)
+            else:
+                question_id = question_id_full
+                question_text = question_id_full
 
             try:
                 ai_output = get_ai_response(csv_string, self.individual_prompt)
@@ -399,7 +473,8 @@ class MainWindow(QMainWindow):
 
                     rows.append({
                         "Student Name": student_name,
-                        "Question ID": df_encoded.columns[q_idx],
+                        "Question ID": question_id.strip(),
+                    "Question Text": question_text.strip(),
                         "Grade": grade,
                         "Feedback": feedback_text,
                         "Status": status
@@ -494,6 +569,16 @@ class MainWindow(QMainWindow):
 
         toggle_button.toggled.connect(toggle_aggregate_body)
 
+        if hasattr(self, 'structured_df') and not self.structured_df.empty:
+            self.histogram_widget = HistogramWidget()
+            self.histogram_widget.display_histograms(self.structured_df)
+            v_layout.addWidget(self.histogram_widget)
+            self.toggle_widgets.append(
+            (self.histogram_widget.toggle_button, 
+             self.histogram_widget.hist_container)
+        )
+    
+
         self.student_layout.addWidget(container)
 
         # add container with all the data
@@ -523,7 +608,6 @@ class MainWindow(QMainWindow):
         dialog = SettingsDialog(self)
         dialog.exec_()
 
-        print("click")
 
 class SettingsDialog(QDialog):
     def __init__(self, parent = None):
@@ -540,6 +624,25 @@ class SettingsDialog(QDialog):
         # Current API Key display
         self.current_key_label = QLabel(f"Current OpenRouter API Key: {load_api_key() or 'Not set'}")
         layout.addWidget(self.current_key_label)
+
+        self.model_selector = QComboBox()
+        self.model_selector.addItems([
+            "LLaMA 3.3 8B (Free)",
+            "LLaMA 3 70B (Free)",
+            "Mixtral 8x7B (Free)",
+            "Claude 3 Haiku (Free)",
+            "Gemma 7B (Free)",
+            "OpenChat 3.5 (Free)"
+        ])
+        current_label = os.getenv("DEFAULT_MODEL", "LLaMA 3.3 8B (Free)")
+        self.model_selector.setCurrentText(current_label)
+        self.model_display = QLabel()
+        layout.addWidget(self.model_display)
+        self.model_display.setText(f"Current Model: {MODEL_OPTIONS[current_label]}")
+        layout.addWidget(QLabel("Select Model:"))
+        layout.addWidget(self.model_selector)
+
+        self.model_selector.currentTextChanged.connect(self.update_model_selection)
 
         # Input field for new API key
         self.input_field = QLineEdit()
@@ -627,6 +730,7 @@ class SettingsDialog(QDialog):
         QMessageBox.information(self, "Success", "API key updated.")
         self.current_key_label.setText(f"Current API Key: {new_key}")
         self.input_field.clear()
+
 
     #Individual prompt functions
     def save_prompt_template(self):
@@ -847,6 +951,14 @@ class SettingsDialog(QDialog):
                     self.parent().set_aggregate_prompt(content)
             # Print prompt name and content for validation
             print(f"[Prompt Selected] Now using AGGREGATE prompt: {name}")
+
+    def update_model_selection(self, selected_text):
+        try:
+            set_model(selected_text)
+            self.model_display.setText(f"Current Model: {MODEL_OPTIONS[selected_text]}")
+        except ValueError as e:
+            QMessageBox.warning(self, "Model Error", str(e))
+
 
 # Run the application
 app = QApplication(sys.argv)
