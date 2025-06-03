@@ -49,3 +49,11 @@ You are a grading assistant evaluating multiple questions from student responses
 3. Never combine feedback across different questions
 4. Always use the specified output format
 """
+
+AGGREGATE_PROMPT = """
+You are an AI grader assistant. I will give you a list of student feedback and grades for a single question. Please provide:
+
+1. A brief summary of the feedback trends across students.
+2. Suggestions for how students could improve their answers.
+3. The average grade.
+"""
