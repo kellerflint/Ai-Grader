@@ -6,19 +6,19 @@ from functools import partial
 from PyQt5.QtGui import QClipboard, QColor
 from PyQt5.QtCore import Qt
 from pathlib import Path
-import sys
-import pandas as pd
 from matplotlib.backends.backend_template import FigureCanvas
 from matplotlib.figure import Figure
-
 from ai_client import get_ai_response, get_ai_response_2, set_model, MODEL_OPTIONS
 from api_key_functions import load_api_key, save_api_key
 from display_histograms import HistogramWidget
 from logs import save_df_as_log, save_text_as_log, get_log_dir
 import os
+import sys
+import pandas as pd
 import functions
 from io import StringIO
 import qtawesome as qta
+
 
 
 #bundles file pathing that allows exe to work or python command to work
@@ -32,6 +32,7 @@ def resource_path(relative_path):
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+        self.toggle_widgets = []
 
         #allows sylesheets to be found and applied
         styles_path = resource_path('styles/styles.qss')
@@ -146,7 +147,7 @@ class MainWindow(QMainWindow):
             ax.hist(grades, bins=bins, edgecolor='black', alpha=0.7)
             
             # Customize the plot
-            ax.set_title(f"Grade Distribution: {question_id.split(':')[0]}")
+            ax.set_title(f"Grade Distribution: {question_id.split(':')[0]}", wrap=True)
             ax.set_xlabel("Grade")
             ax.set_ylabel("Number of Students")
             ax.grid(True, alpha=0.3)
@@ -505,68 +506,70 @@ class MainWindow(QMainWindow):
         return aggregate_feedback
 
     def display_aggregate_feedback(self, feedback):
-        # Create a container widget to hold responses
+        # Parse feedback into a dictionary
+        feedback_blocks = feedback.strip().split("\n")
+        summaries = {}
+        current_qid = None
+        current_lines = []
+
+        for line in feedback_blocks:
+            if line.strip() in self.structured_df["Question ID"].unique():
+                if current_qid and current_lines:
+                    summaries[current_qid] = "\n".join(current_lines).strip()
+                current_qid = line.strip()
+                current_lines = []
+            else:
+                current_lines.append(line)
+
+        if current_qid and current_lines:
+            summaries[current_qid] = "\n".join(current_lines).strip()
+
+        # Main container for toggle
         container = QWidget()
-        v_layout = QVBoxLayout(container)
-        v_layout.setContentsMargins(0, 0, 0, 0)
-        v_layout.setSpacing(5)
-
-        v_layout
-
-        # create toggle widget for use with this AND with display students
-        self.toggle_widgets = []
-
-        header_label = QLabel("Class Summary")
-        header_label.setStyleSheet("font-weight: bold; font-size: 20px; margin: 10px 0;")
-        header_label.setAlignment(Qt.AlignLeft)
-        v_layout.addWidget(header_label)
-
-        # header for aggregate data
-        header_frame = QFrame()
-        header_layout = QHBoxLayout(header_frame)
-        header_layout.setContentsMargins(0, 0, 0, 0)
+        layout = QVBoxLayout(container)
+        layout.setContentsMargins(0, 0, 0, 0)
 
         toggle_button = QToolButton()
         toggle_button.setText("Aggregate Data")
         toggle_button.setCheckable(True)
         toggle_button.setChecked(False)
-        toggle_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         toggle_button.setArrowType(Qt.RightArrow)
         toggle_button.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        toggle_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
 
-        text_edit = QLabel()
-        text_edit.setText(feedback)
-        text_edit.setWordWrap(True)
-        text_edit.setVisible(False)
-        text_edit.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
-
+        header_frame = QFrame()
+        header_layout = QHBoxLayout(header_frame)
+        header_layout.setContentsMargins(0, 0, 0, 0)
         header_layout.addWidget(toggle_button)
-        header_frame.setLayout(header_layout)
-        self.toggle_widgets.append((toggle_button, text_edit))
 
-        v_layout.addWidget(header_frame)
-        v_layout.addWidget(text_edit)
+        summary_container = QWidget()
+        summary_layout = QVBoxLayout(summary_container)
+        summary_layout.setContentsMargins(0, 0, 0, 0)
 
-        def toggle_aggregate_body(checked, body=text_edit, button=toggle_button):
-            body.setVisible(checked)
-            button.setArrowType(Qt.DownArrow if checked else Qt.RightArrow)
+        grouped = self.structured_df.groupby("Question ID")
+        for question_id, group in grouped:
 
-        toggle_button.toggled.connect(toggle_aggregate_body)
+            # single histogram per question
+            histogram_widget = HistogramWidget.create_histogram_widget(group, column="Grade", bins=10)
+            summary_layout.addWidget(histogram_widget)
 
-        if hasattr(self, 'structured_df') and not self.structured_df.empty:
-            self.histogram_widget = HistogramWidget()
-            self.histogram_widget.display_histograms(self.structured_df)
-            v_layout.addWidget(self.histogram_widget)
-            self.toggle_widgets.append(
-            (self.histogram_widget.toggle_button, 
-             self.histogram_widget.hist_container)
-        )
-    
+            feedback_text = summaries.get(question_id, "No feedback available.")
+            feedback_label = QLabel(feedback_text)
+            feedback_label.setWordWrap(True)
+            summary_layout.addWidget(feedback_label)
 
+        summary_container.setVisible(False)
+
+        def toggle_body(checked):
+            summary_container.setVisible(checked)
+            toggle_button.setArrowType(Qt.DownArrow if checked else Qt.RightArrow)
+
+        toggle_button.toggled.connect(toggle_body)
+
+        layout.addWidget(header_frame)
+        layout.addWidget(summary_container)
         self.student_layout.addWidget(container)
-
-        # add container with all the data
-        self.student_layout.addWidget(container)
+        self.toggle_widgets.append((toggle_button, summary_container))
 
     def show_faq(self, event):
         msg = QMessageBox()  # 'msg' is the QMessageBox, not the faqButton
