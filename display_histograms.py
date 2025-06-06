@@ -43,34 +43,26 @@ class HistogramWidget(QWidget):
     def toggle_histograms(self, checked):
         self.hist_container.setVisible(checked)
         self.toggle_button.setArrowType(Qt.DownArrow if checked else Qt.RightArrow)
-    
-    def display_histograms(self, df, column="Grade", bins=10):
-        # Clear existing
-        for i in reversed(range(self.hist_layout.count())):
-            widget = self.hist_layout.itemAt(i).widget()
-            if widget:
-                widget.setParent(None)
-        
-        # Group by Question ID
-        grouped = df.groupby("Question ID")
-        
-        for question_id, group in grouped:
-            # this row holds our question text for the title
-            sample_row = group.iloc[0]
 
-            fig = Figure(figsize=(6, 4.5), dpi=100)
-            canvas = FigureCanvas(fig)
-            canvas.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
-            canvas.setMinimumHeight(350)
-            
-            ax = fig.add_subplot(111)
-            grades = group[column].dropna()
-            ax.hist(grades, bins=bins, edgecolor='black', alpha=0.7)
-            
-            ax.set_title(f"Question: {sample_row['Question Text']}", wrap=True)
-            ax.set_xlabel("Grade")
-            ax.set_ylabel("Number of Students")
-            ax.grid(True, alpha=0.3)
-            fig.tight_layout()
-            
-            self.hist_layout.addWidget(canvas)
+    def create_histogram_widget(group, column="Grade", bins=10):
+        widget = QWidget()
+        layout = QVBoxLayout(widget)
+        layout.setContentsMargins(0, 0, 0, 0)
+
+        fig = Figure(figsize=(6, 4.5), dpi=100)
+        canvas = FigureCanvas(fig)
+        canvas.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        canvas.setMinimumHeight(350)
+
+        ax = fig.add_subplot(111)
+        grades = group[column].dropna()
+        sample_row = group.iloc[0]
+        ax.hist(grades, bins=bins, edgecolor='black', alpha=0.7)
+        ax.set_title(f"Question: {sample_row['Question Text']}", wrap=True)
+        ax.set_xlabel("Grade")
+        ax.set_ylabel("Number of Students")
+        ax.grid(True, alpha=0.3)
+        fig.tight_layout()
+
+        layout.addWidget(canvas)
+        return widget
