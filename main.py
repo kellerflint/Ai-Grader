@@ -631,11 +631,12 @@ class SettingsDialog(QDialog):
         self.model_selector = QComboBox()
         self.model_selector.addItems([
             "LLaMA 3.3 8B (Free)",
-            "LLaMA 3 70B (Free)",
-            "Mixtral 8x7B (Free)",
-            "Claude 3 Haiku (Free)",
-            "Gemma 7B (Free)",
-            "OpenChat 3.5 (Free)"
+            "DeepSeek R1 Qwen3 8B (Free)",
+            "LLaMA 4 Maverick (Free)",
+            "DeepSeek Chat V3 (Free)",
+            "DeepHermes 3 (Free)",
+            "Mistral 7B Instruct (Free)",
+            "Gemma 3 4B (Free)",
         ])
         current_label = os.getenv("DEFAULT_MODEL", "LLaMA 3.3 8B (Free)")
         self.model_selector.setCurrentText(current_label)
