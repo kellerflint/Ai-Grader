@@ -9,11 +9,12 @@ from app.ai.api_key_functions import get_api_key
 load_dotenv(dotenv_path="config.env")
 MODEL_OPTIONS = {
     "LLaMA 3.3 8B (Free)": "meta-llama/llama-3.3-8b-instruct:free",
-    "LLaMA 3 70B (Free)": "meta-llama/llama-3-70b-instruct:free",
-    "Mixtral 8x7B (Free)": "mistral/mixtral-8x7b-instruct:free",
-    "Claude 3 Haiku (Free)": "anthropic/claude-3-haiku:free",
-    "Gemma 7B (Free)": "google/gemma-7b-it:free",
-    "OpenChat 3.5 (Free)": "openchat/openchat-3.5-0106:free"
+    "DeepSeek R1 Qwen3 8B (Free)": "deepseek/deepseek-r1-0528-qwen3-8b:free",
+    "LLaMA 4 Maverick (Free)": "meta-llama/llama-4-maverick:free",
+    "DeepSeek Chat V3 (Free)": "deepseek/deepseek-chat-v3-0324:free",
+    "DeepHermes 3 (Free)": "nousresearch/deephermes-3-llama-3-8b-preview:free",
+    "Mistral 7B Instruct (Free)": "mistralai/mistral-7b-instruct:free",
+    "Gemma 3 4B (Free)": "google/gemma-3-4b-it:free",
 }
 def get_model_from_label(label):
     return MODEL_OPTIONS.get(label, MODEL_OPTIONS["LLaMA 3.3 8B (Free)"])
