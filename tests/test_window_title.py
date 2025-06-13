@@ -1,4 +1,4 @@
-from main import MainWindow
+from app.main import MainWindow
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import QTimer
 import sys

@@ -30,7 +30,7 @@ pip install pyqt5 groq pandas python-dotenv pyqtgraph
 Run the application:
 
 ```bash
-    python main.py
+    python -m app.main
 ```
 
 Setting Up API Key
