@@ -40,50 +40,53 @@ class SettingsDialog(QDialog):
         current_label = os.getenv("DEFAULT_MODEL", "LLaMA 3.3 8B (Free)")
         self.model_selector.setCurrentText(current_label)
         self.model_display = QLabel()
-        layout.addWidget(self.model_display)
+        layout.addWidget(self.model_display, 2,0,1,2)
+
         self.model_display.setText(f"Current Model: {MODEL_OPTIONS[current_label]}")
         layout.addWidget(QLabel("Select Model:"))
-        layout.addWidget(self.model_selector)
+        layout.addWidget(self.model_selector, 3,0,1,2)
+
 
         self.model_selector.currentTextChanged.connect(self.update_model_selection)
 
         # Input field for new API key
         self.input_field = QLineEdit()
         self.input_field.setPlaceholderText("Enter new OpenRouter API key")
-        layout.addWidget(self.input_field)
+        layout.addWidget(self.input_field, 4,0,1,2)
+
 
         # Save button
         save_button = QPushButton("Save API Key")
         save_button.clicked.connect(self.save_new_api_key)
-        layout.addWidget(save_button, 2, 0, 1, 2)
+        layout.addWidget(save_button, 5, 0, 1, 2)
 
         # --- New prompt settings section ---
         # Label for the prompt name input
         prompt_name_label = QLabel("Individual Prompt Name:")
-        layout.addWidget(prompt_name_label, 3, 0, 1, 2)
+        layout.addWidget(prompt_name_label, 6, 0, 1, 2)
 
         # Input field for new prompt name
         self.prompt_name_input = QLineEdit()
         self.prompt_name_input.setPlaceholderText("Enter name for this prompt")
-        layout.addWidget(self.prompt_name_input, 4, 0, 1, 2)
+        layout.addWidget(self.prompt_name_input, 7, 0, 1, 2)
 
         # Input field for new prompt
         self.prompt_edit = QTextEdit()
         self.prompt_edit.setPlaceholderText("Enter prompt template here...")
         self.prompt_edit.setFixedHeight(100)
-        layout.addWidget(self.prompt_edit, 5, 0, 1, 2)
+        layout.addWidget(self.prompt_edit, 8, 0, 1, 2)
 
         # Save button for prompt input
         save_prompt_button = QPushButton("Save Individual Prompt")
         save_prompt_button.clicked.connect(self.save_prompt_template)
-        layout.addWidget(save_prompt_button, 6, 0, 1, 2)
+        layout.addWidget(save_prompt_button, 9, 0, 1, 2)
 
         # Dropdown for existing saved prompts (read-only list)
         dropdown_name_label = QLabel("Select Individual Custom Prompt:")
-        layout.addWidget(dropdown_name_label, 7, 0, 1, 2)
+        layout.addWidget(dropdown_name_label, 10, 0, 1, 2)
         self.prompt_dropdown = QComboBox()
         self.prompt_dropdown.setPlaceholderText("Saved Prompts")
-        layout.addWidget(self.prompt_dropdown, 8, 0, 1, 2)
+        layout.addWidget(self.prompt_dropdown, 11, 0, 1, 2)
 
         # Load the latest prompt if available
         self.load_prompts_into_dropdown()
@@ -91,36 +94,36 @@ class SettingsDialog(QDialog):
         # Red "Update Prompt" button
         update_prompt_button = QPushButton("Update Individual Prompt")
         update_prompt_button.setStyleSheet("background-color: blue; color: white;")
-        layout.addWidget(update_prompt_button, 9, 0, 1, 2)
+        layout.addWidget(update_prompt_button, 12, 0, 1, 2)
         update_prompt_button.clicked.connect(self.update_selected_prompt)
 
         # --- Aggregate prompt settings section ---
         aggregate_name_label = QLabel("Aggregate Prompt Name:")
-        layout.addWidget(aggregate_name_label, 10, 0, 1, 2)
+        layout.addWidget(aggregate_name_label, 13, 0, 1, 2)
 
         self.aggregate_name_input = QLineEdit()
         self.aggregate_name_input.setPlaceholderText("Enter name for this aggregate prompt")
-        layout.addWidget(self.aggregate_name_input, 11, 0, 1, 2)
+        layout.addWidget(self.aggregate_name_input, 14, 0, 1, 2)
 
         self.aggregate_prompt_edit = QTextEdit()
         self.aggregate_prompt_edit.setPlaceholderText("Enter aggregate prompt template here...")
         self.aggregate_prompt_edit.setFixedHeight(100)
-        layout.addWidget(self.aggregate_prompt_edit, 12, 0, 1, 2)
+        layout.addWidget(self.aggregate_prompt_edit, 15, 0, 1, 2)
 
         save_agg_button = QPushButton("Save Aggregate Prompt")
         save_agg_button.clicked.connect(self.save_aggregate_prompt_template)
-        layout.addWidget(save_agg_button, 13, 0, 1, 2)
+        layout.addWidget(save_agg_button, 16, 0, 1, 2)
 
         aggregate_dropdown_name_label = QLabel("Select Aggregate Custom Prompt:")
-        layout.addWidget(aggregate_dropdown_name_label, 14, 0, 1, 2)
+        layout.addWidget(aggregate_dropdown_name_label, 17, 0, 1, 2)
         self.aggregate_prompt_dropdown = QComboBox()
         self.aggregate_prompt_dropdown.setPlaceholderText("Saved Aggregate Prompts")
-        layout.addWidget(self.aggregate_prompt_dropdown, 15, 0, 1, 2)
+        layout.addWidget(self.aggregate_prompt_dropdown, 18, 0, 1, 2)
 
         update_agg_button = QPushButton("Update Aggregate Prompt")
         update_agg_button.setStyleSheet("background-color: blue; color: white;")
         update_agg_button.clicked.connect(self.update_aggregate_prompt)
-        layout.addWidget(update_agg_button, 16, 0, 1, 2)
+        layout.addWidget(update_agg_button, 19, 0, 1, 2)
 
         self.load_aggregate_prompts_into_dropdown()
 
