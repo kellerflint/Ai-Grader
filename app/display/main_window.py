@@ -1,35 +1,29 @@
+import os
+import sys
+import pandas as pd
+from io import StringIO
+from functools import partial
 from PyQt5.QtWidgets import QApplication, QStyle, QWidget, QGridLayout, QToolButton, QScrollArea, QPushButton, \
     QMainWindow, \
     QFileDialog, QMessageBox, QTextEdit, QLabel, QLineEdit, QDialog, QHBoxLayout, QVBoxLayout, QFrame, QSpacerItem, \
     QSizePolicy, QComboBox
-from functools import partial
 from PyQt5.QtGui import QClipboard, QColor
 from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QComboBox
+import qtawesome as qta
 from pathlib import Path
 from matplotlib.backends.backend_template import FigureCanvas
 from matplotlib.figure import Figure
-from ai_client import get_ai_response, get_ai_response_2, set_model, MODEL_OPTIONS
-from api_key_functions import load_api_key, save_api_key
-from display_histograms import HistogramWidget
-from logs import save_df_as_log, save_text_as_log, get_log_dir
-import os
-import sys
-import pandas as pd
-import functions
-from io import StringIO
-import qtawesome as qta
-from prompt_store import save_prompt, load_prompts, save_aggregate_prompt, load_aggregate_prompts
-from PyQt5.QtWidgets import QComboBox
-from default_settings import AGGREGATE_PROMPT
 
-from app.settings_dialog import SettingsDialog
+from app.ai.ai_client import get_ai_response, get_ai_response_2, set_model, MODEL_OPTIONS
+from app.ai.api_key_functions import load_api_key, save_api_key
+from app.display.display_histograms import HistogramWidget
+from app.storage.logs import save_df_as_log, save_text_as_log, get_log_dir
+from app import functions
+from app.storage.prompt_store import save_prompt, load_prompts, save_aggregate_prompt, load_aggregate_prompts
+from app.ai.default_settings import AGGREGATE_PROMPT
+from app.display.settings_dialog import SettingsDialog
 from app.file_handlers import resource_path
-
-
-
-
-
-
 
 class MainWindow(QMainWindow):
     def __init__(self):

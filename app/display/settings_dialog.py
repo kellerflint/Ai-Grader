@@ -4,13 +4,13 @@ from PyQt5.QtWidgets import (
 )
 import os
 
-from default_settings import PROMPT, AGGREGATE_PROMPT
-from api_key_functions import load_api_key, save_api_key
-from prompt_store import (
+from app.ai.default_settings import PROMPT, AGGREGATE_PROMPT
+from app.ai.api_key_functions import load_api_key, save_api_key
+from app.storage.prompt_store import (
     save_prompt, load_prompts,
     save_aggregate_prompt, load_aggregate_prompts
 )
-from ai_client import MODEL_OPTIONS, set_model
+from app.ai.ai_client import MODEL_OPTIONS, set_model
 
 class SettingsDialog(QDialog):
     def __init__(self, parent = None):
@@ -164,7 +164,7 @@ class SettingsDialog(QDialog):
 
 
     def load_prompts_into_dropdown(self):
-        from default_settings import PROMPT as default_prompt
+        from app.ai.default_settings import PROMPT as default_prompt
 
         try:
             self.prompt_dropdown.currentIndexChanged.disconnect()

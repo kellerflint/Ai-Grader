@@ -1,10 +1,10 @@
 import json, os
 from pathlib import Path
-
-import default_settings as default
 import requests
 from dotenv import load_dotenv, set_key
-from api_key_functions import get_api_key
+
+from app.ai import default_settings as default
+from app.ai.api_key_functions import get_api_key
 
 load_dotenv(dotenv_path="config.env")
 MODEL_OPTIONS = {
@@ -72,7 +72,7 @@ def get_ai_response(user_input: str, system_prompt: str = None):
     
     # fallback to default
     if system_prompt is None:
-        from default_settings import PROMPT as system_prompt  
+        from app.ai.default_settings import PROMPT as system_prompt  
 
     data = {
         "model" : model,
