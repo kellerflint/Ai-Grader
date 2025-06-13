@@ -196,17 +196,21 @@ class MainWindow(QMainWindow):
             feedback = ""
             copy_text = ""
             for question in all_questions:
-                if question in feedback_map:
-                    answer, status = feedback_map[question]
+                question_row = group[group["Question ID"] == question]
+                if not question_row.empty:
+                    answer = question_row["Feedback"].iloc[0]
+                    status = question_row["Status"].iloc[0]
+                    grade = question_row["Grade"].iloc[0] if "Grade" in question_row else "N/A"
+
                     if status in ["Missing", "Incomplete"]:
-                        feedback += f"⚠️ {question}: (Missing or incomplete response)\n\n"
-                        copy_text += "(Missing or incomplete response)"
+                        feedback += f"⚠️ {question}:\n(Missing or incomplete response)\nGrade: {int(grade)}\n\n"
+                        copy_text += f"{question}: (Missing or incomplete response)\nGrade: {int(grade)}\n\n"
                     else:
-                        feedback += f"{question}:\n{answer}\n\n"
-                        copy_text += f"{answer}\n\n"
+                        feedback += f"{question}:\n{answer}\nGrade: {int(grade)}\n\n"
+                        copy_text += f"{question}:\n{answer}\nGrade: {int(grade)}\n\n"
                 else:
-                    feedback += f"⚠️ {question}: (No response submitted)\n\n"
-                    copy_text += "(No response submitted)"
+                    feedback += f"⚠️ {question}:\n(No response submitted)\nGrade: N/A\n\n"
+                    copy_text += f"{question}: (No response submitted)\nGrade: N/A\n\n"
 
            # Collapsible Sections
             section_widget = QWidget()
