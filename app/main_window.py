@@ -24,9 +24,9 @@ from default_settings import AGGREGATE_PROMPT
 
 from app.settings_dialog import SettingsDialog
 from app.file_handlers import resource_path
-from app.ai_processing import parse_ai_response, generate_structured_feedback, get_aggregate_grades, sanitize_for_excel
+from app.ai_processing import parse_ai_response, generate_structured_feedback, get_aggregate_grades
 from app.file_handlers import upload_file, upload_feedback, on_file_uploaded,process_file
-from app.feedback_display import display_students, display_aggregate_feedback, copy_specific_feedback, toggle_all_sections, show_faq, open_settings_dialog
+from app.feedback_display import display_students, display_aggregate_feedback, copy_specific_feedback, toggle_all_sections
 
 
 class MainWindow(QMainWindow):
@@ -43,8 +43,8 @@ class MainWindow(QMainWindow):
         self.display_aggregate_feedback = display_aggregate_feedback.__get__(self)
         self.copy_specific_feedback = copy_specific_feedback.__get__(self)
         self.toggle_all_sections = toggle_all_sections.__get__(self)
-        self.show_faq = show_faq.__get__(self)
-        self.open_settings_dialog = open_settings_dialog.__get__(self)
+        self.show_faq = self.show_faq.__get__(self)
+        self.open_settings_dialog = self.open_settings_dialog.__get__(self)
 
         #allows sylesheets to be found and applied
         styles_path = resource_path('styles/styles.qss')
