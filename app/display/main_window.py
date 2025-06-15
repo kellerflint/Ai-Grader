@@ -15,18 +15,11 @@ from pathlib import Path
 from matplotlib.backends.backend_template import FigureCanvas
 from matplotlib.figure import Figure
 
-from app.ai.ai_client import get_ai_response, get_ai_response_2, set_model, MODEL_OPTIONS
-from app.ai.api_key_functions import load_api_key, save_api_key
-from app.display.display_histograms import HistogramWidget
-from app.storage.logs import save_df_as_log, save_text_as_log, get_log_dir
-from app import functions
-from app.storage.prompt_store import save_prompt, load_prompts, save_aggregate_prompt, load_aggregate_prompts
-from app.ai.default_settings import AGGREGATE_PROMPT
 from app.display.settings_dialog import SettingsDialog
 from app.display.file_handlers import resource_path
-from app.display.ai_processing import parse_ai_response, generate_structured_feedback, get_aggregate_grades, sanitize_for_excel
+from app.display.ai_processing import parse_ai_response, generate_structured_feedback, get_aggregate_grades
 from app.display.file_handlers import upload_file, upload_feedback, on_file_uploaded,process_file
-from app.display.feedback_display import display_students, display_aggregate_feedback, copy_specific_feedback, toggle_all_sections, show_faq, open_settings_dialog
+from app.display.feedback_display import display_students, display_aggregate_feedback, copy_specific_feedback, toggle_all_sections
 
 
 class MainWindow(QMainWindow):
@@ -43,8 +36,8 @@ class MainWindow(QMainWindow):
         self.display_aggregate_feedback = display_aggregate_feedback.__get__(self)
         self.copy_specific_feedback = copy_specific_feedback.__get__(self)
         self.toggle_all_sections = toggle_all_sections.__get__(self)
-        self.show_faq = show_faq.__get__(self)
-        self.open_settings_dialog = open_settings_dialog.__get__(self)
+        self.show_faq = self.show_faq.__get__(self)
+        self.open_settings_dialog = self.open_settings_dialog.__get__(self)
 
         #allows sylesheets to be found and applied
         styles_path = resource_path('styles/styles.qss')
