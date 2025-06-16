@@ -3,7 +3,8 @@ import os
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
 from app.storage.logs import get_log_dir, save_df_as_log, save_text_as_log
 import pandas as pd
-import functions
+from .. import functions
+from .ai_processing import get_aggregate_grades
 
 def resource_path(relative_path):
     try:
@@ -61,7 +62,7 @@ def upload_feedback(self):
                 QMessageBox.critical(self, "Error", f"An error occurred: {str(e)}")
                 if not os.path.exists(aggregate_feedback_file_path):
                     # rerun aggregate grades
-                    aggregate_grades = "[Re-Submitted] " + self.get_aggregate_grades()
+                    aggregate_grades = "[Re-Submitted] " + get_aggregate_grades(self.structured_df, getattr(self, 'aggregate_prompt', None))
             
             self.display_aggregate_feedback(aggregate_grades)
             self.display_students()
@@ -98,7 +99,8 @@ def process_file(self):
             QMessageBox.information(self, "Complete", f"Evaluated {len(question_indexes)} questions\nResults saved to: {output_path}")
 
             # builds the dataframe will add more comment later
-            structured_df = self.generate_structured_feedback(df, question_indexes, idMap)
+            from .ai_processing import generate_structured_feedback
+            structured_df = generate_structured_feedback(df, question_indexes, idMap, self.individual_prompt)
             structured_path = os.path.join(
                 os.path.dirname(self.file_path),
                 "structured_feedback.csv"
@@ -114,7 +116,7 @@ def process_file(self):
             # save the df to the app for use with copy buttons
             self.structured_df = structured_df  
             # print(self.structured_df)
-            aggregate_grades = self.get_aggregate_grades()
+            aggregate_grades = get_aggregate_grades(self.structured_df, getattr(self, 'aggregate_prompt', None))
 
             #save aggregate grades
             save_text_as_log(aggregate_grades, timestamp)
@@ -124,4 +126,4 @@ def process_file(self):
             self.display_students()
 
         except Exception as e:
-            QMessageBox.critical(self, "Error", f"An error occurred: {str(e)}")                               
+            QMessageBox.critical(self, "Error", f"An error occurred: {str(e)}")

@@ -15,11 +15,11 @@ from pathlib import Path
 from matplotlib.backends.backend_template import FigureCanvas
 from matplotlib.figure import Figure
 
-from app.display.settings_dialog import SettingsDialog
-from app.display.file_handlers import resource_path
-from app.display.ai_processing import parse_ai_response, generate_structured_feedback, get_aggregate_grades
-from app.display.file_handlers import upload_file, upload_feedback, on_file_uploaded,process_file
-from app.display.feedback_display import display_students, display_aggregate_feedback, copy_specific_feedback, toggle_all_sections
+from .settings_dialog import SettingsDialog
+from .file_handlers import resource_path
+from .ai_processing import parse_ai_response, generate_structured_feedback, get_aggregate_grades
+from .file_handlers import upload_file, upload_feedback, on_file_uploaded,process_file
+from .feedback_display import display_students, display_aggregate_feedback, copy_specific_feedback, toggle_all_sections
 
 
 class MainWindow(QMainWindow):

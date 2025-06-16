@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import QLabel, QWidget, QVBoxLayout, QHBoxLayout, QFrame, Q
 import qtawesome as qta
 from PyQt5.QtCore import Qt
 from functools import partial
-from display_histograms import HistogramWidget
+from .display_histograms import HistogramWidget
 from matplotlib.backends.backend_template import FigureCanvas
 from matplotlib.figure import Figure
 
