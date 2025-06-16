@@ -4,7 +4,8 @@ from PyQt5.QtWidgets import QFileDialog, QMessageBox
 from app.storage.logs import get_log_dir, save_df_as_log, save_text_as_log
 import pandas as pd
 from .. import functions
-from .ai_processing import get_aggregate_grades
+from .ai_processing import get_aggregate_grades, generate_structured_feedback
+
 
 def resource_path(relative_path):
     try:
@@ -73,57 +74,61 @@ def upload_feedback(self):
 def on_file_uploaded(self):
                 self.ask_ai_button.setEnabled(True)
                 self.ask_ai_button.setStyleSheet("")  
-                self.ask_ai_button.setToolTip("Click to submit")   
+                self.ask_ai_button.setToolTip("Click to submit")
+
 
 def process_file(self):
-        if not self.file_path:
-            QMessageBox.warning(self, "No File", "Please upload a CSV file first.")
-            return
+    if not self.file_path:
+        QMessageBox.warning(self, "No File", "Please upload a CSV file first.")
+        return
 
-        try:
-             # Read the CSV file
-            df = pd.read_csv(self.file_path)
+    try:
+        # Read the CSV file
+        df = pd.read_csv(self.file_path)
 
-            # Map student ids to temp ids
-            idMap = functions.createIdMap(df["id"])
-            df = functions.useMapEncode(df, idMap)
+        # Map student ids to temp ids
+        idMap = functions.createIdMap(df["id"])
+        df_encoded = functions.useMapEncode(df, idMap)
+        id_to_name = dict(zip(df["id"], df["name"]))  # Map IDs to names
 
-            # Get all question columns
-            question_indexes = functions.findQuestionIndexes(df)
+        # Get all question columns
+        question_indexes = functions.findQuestionIndexes(df)
 
-            # Decode ids and save original df
-            df = functions.useMapDecode(df, idMap)
-            output_path = os.path.join(os.path.dirname(self.file_path), "processed_results.csv")
-            df.to_csv(output_path, index=False)
-            
-            QMessageBox.information(self, "Complete", f"Evaluated {len(question_indexes)} questions\nResults saved to: {output_path}")
+        # Decode ids and save original df
+        df = functions.useMapDecode(df, idMap)
 
-            # builds the dataframe will add more comment later
-            from .ai_processing import generate_structured_feedback
-            structured_df = generate_structured_feedback(df, question_indexes, idMap, self.individual_prompt)
-            structured_path = os.path.join(
-                os.path.dirname(self.file_path),
-                "structured_feedback.csv"
-            )
-            structured_df.to_csv(structured_path, index=False)
-            timestamp = save_df_as_log(structured_df)
-            QMessageBox.information(
-                self,
-                "Structured Export",
-                f"Structured feedback saved to: {structured_path}"
-            )
+        df_decoded = functions.useMapDecode(df_encoded, idMap)
+        output_path = os.path.join(os.path.dirname(self.file_path), "processed_results.csv")
+        df_decoded.to_csv(output_path, index=False)
 
-            # save the df to the app for use with copy buttons
-            self.structured_df = structured_df  
-            # print(self.structured_df)
-            aggregate_grades = get_aggregate_grades(self.structured_df, getattr(self, 'aggregate_prompt', None))
+        QMessageBox.information(self, "Complete",
+                                f"Evaluated {len(question_indexes)} questions\nResults saved to: {output_path}")
 
-            #save aggregate grades
-            save_text_as_log(aggregate_grades, timestamp)
+        # builds the dataframe
+        structured_df = generate_structured_feedback(df_encoded, question_indexes, idMap, id_to_name,self.individual_prompt)
+        structured_path = os.path.join(
+            os.path.dirname(self.file_path),
+            "structured_feedback.csv"
+        )
+        structured_df.to_csv(structured_path, index=False)
+        timestamp = save_df_as_log(structured_df)
+        QMessageBox.information(
+            self,
+            "Structured Export",
+            f"Structured feedback saved to: {structured_path}"
+        )
 
-            #display aggregate grades
-            self.display_aggregate_feedback(aggregate_grades)
-            self.display_students()
+        # save the df to the app for use with copy buttons
+        self.structured_df = structured_df
+        # print(self.structured_df)
+        aggregate_grades = get_aggregate_grades(self.structured_df, getattr(self, 'aggregate_prompt', None))
+        # save aggregate grades
+        save_text_as_log(aggregate_grades, timestamp)
 
-        except Exception as e:
-            QMessageBox.critical(self, "Error", f"An error occurred: {str(e)}")
+        # display aggregate grades
+        self.display_aggregate_feedback(aggregate_grades)
+        self.display_students()
+
+    except Exception as e:
+        QMessageBox.critical(self, "Error", f"An error occurred: {str(e)}")
+

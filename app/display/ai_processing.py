@@ -9,7 +9,7 @@ def parse_ai_response(self, response):
 
         try:
             parts = response.split('Grade:')
-            # everything before “Grade:” is the feedback text
+            # everything abefore “Grade:” is the feedback text
             feedback_text = parts[0].strip()
             # everything after “Grade:” is the number grade
             grade = float(parts[1].strip())
@@ -18,63 +18,64 @@ def parse_ai_response(self, response):
             return None, response
         
 # dataframe using temp ids for names
-def generate_structured_feedback(df_encoded, question_indexes, idMap, individual_prompt):
-        inverted = {v: k for k, v in idMap.items()}
-        rows = []
+def generate_structured_feedback(df_encoded, question_indexes, idMap, id_to_name, individual_prompt):
+    inverted = {v: k for k, v in idMap.items()}
+    rows = []
 
-        for q_idx in question_indexes:
-            question_df = functions.splitDfByQuestion(df_encoded, q_idx)
-            csv_string = question_df.to_csv(index=False)
+    for q_idx in question_indexes:
+        question_df = functions.splitDfByQuestion(df_encoded, q_idx)
+        csv_string = question_df.to_csv(index=False)
 
-            question_id_full = df_encoded.columns[q_idx]
+        question_id_full = df_encoded.columns[q_idx]
 
-            if "\n" in question_id_full:
-                question_id, question_text = question_id_full.split("\n", 1)
-            else:
-                question_id = question_id_full
-                question_text = question_id_full
+        if "\n" in question_id_full:
+            question_id, question_text = question_id_full.split("\n", 1)
+        else:
+            question_id = question_id_full
+            question_text = question_id_full
 
-            try:
-                ai_output = get_ai_response(csv_string, individual_prompt)
-            except RuntimeError as e:
-                QMessageBox.critical(None, "AI Error", f"Failed to get AI feedback:\n{str(e)}")
-                continue 
+        try:
+            ai_output = get_ai_response(csv_string,individual_prompt)
+        except RuntimeError as e:
+            QMessageBox.critical( "AI Error", f"Failed to get AI feedback:\n{str(e)}")
+            continue
 
             # split on the '---' lines to get each feedback piece
-            blocks = [b.strip() for b in ai_output.split('---') if b.strip()]
-            for block in blocks:
-                lines = block.splitlines()
-                id_line = next((l for l in lines if l.startswith("ID:")), None)
-                grade_line = next((l for l in lines if l.startswith("Grade:")), None)
-                if id_line and grade_line:
-                    temp_id = int(id_line.split("ID:")[1].strip())
-                    grade = float(grade_line.split("Grade:")[1].strip())
-                    # leftover lines are the bullet‐point feedback
-                    feedback_lines = [l for l in lines if not l.startswith(("ID:", "Grade:"))]
-                    feedback_text = "\n".join(feedback_lines).strip()
+        blocks = [b.strip() for b in ai_output.split('---') if b.strip()]
+        for block in blocks:
+            lines = block.splitlines()
+            id_line = next((l for l in lines if l.startswith("ID:")), None)
+            grade_line = next((l for l in lines if l.startswith("Grade:")), None)
+            if id_line and grade_line:
+                temp_id = int(id_line.split("ID:")[1].strip())
+                grade = float(grade_line.split("Grade:")[1].strip())
+                # leftover lines are the bullet‐point feedback
+                feedback_lines = [l for l in lines if not l.startswith(("ID:", "Grade:"))]
+                feedback_text = "\n".join(feedback_lines).strip()
 
-                    # Fix Excel
-                    if feedback_text.startswith(("=", "-", "+", "@")):
-                        feedback_text = "'" + feedback_text
+                # Fix Excel
+                if feedback_text.startswith(("=", "-", "+", "@")):
+                    feedback_text = "'" + feedback_text
 
-                    student_name = inverted.get(temp_id, temp_id)
-                    if not feedback_text.strip():
-                        status = "Missing"
-                    elif len(feedback_text.split()) < 5:
-                        status = "Incomplete"
-                    else:
-                        status = "Answered"
+                original_id = inverted.get(temp_id)
+                student_name = id_to_name.get(original_id, f"Student{temp_id}")
+                if not feedback_text.strip():
+                    status = "Missing"
+                elif len(feedback_text.split()) < 5:
+                    status = "Incomplete"
+                else:
+                    status = "Answered"
 
-                    rows.append({
-                        "Student Name": student_name,
-                        "Question ID": question_id.strip(),
+                rows.append({
+                    "Student Name": student_name,
+                    "Question ID": question_id.strip(),
                     "Question Text": question_text.strip(),
-                        "Grade": grade,
-                        "Feedback": feedback_text,
-                        "Status": status
-                    })
+                    "Grade": grade,
+                    "Feedback": feedback_text,
+                    "Status": status
+                })
 
-        return pd.DataFrame(rows)        
+    return pd.DataFrame(rows)
 
 def get_aggregate_grades(structured_df, aggregate_prompt=None):
     # Filter out rows where feedback is too short
