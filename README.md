@@ -6,6 +6,7 @@ This project uses AI to process a CSV file through a desktop application and ret
 - Colton Matthews
 - Dale Kanikkeberg
 - Ethan Deister
+- Garrett Ballreich
 - Kasyn Tang
 - Sage Markwardt
 
