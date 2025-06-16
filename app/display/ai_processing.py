@@ -1,4 +1,4 @@
-import functions
+from .. import functions
 from app.ai.ai_client import get_ai_response, get_ai_response_2, set_model, MODEL_OPTIONS
 from app.ai.default_settings import AGGREGATE_PROMPT
 from PyQt5.QtWidgets import QMessageBox
@@ -17,8 +17,8 @@ def parse_ai_response(self, response):
         except:
             return None, response
         
- # dataframe using temp ids for names
-def generate_structured_feedback(self, df_encoded, question_indexes, idMap):
+# dataframe using temp ids for names
+def generate_structured_feedback(df_encoded, question_indexes, idMap, individual_prompt):
         inverted = {v: k for k, v in idMap.items()}
         rows = []
 
@@ -35,9 +35,9 @@ def generate_structured_feedback(self, df_encoded, question_indexes, idMap):
                 question_text = question_id_full
 
             try:
-                ai_output = get_ai_response(csv_string, self.individual_prompt)
+                ai_output = get_ai_response(csv_string, individual_prompt)
             except RuntimeError as e:
-                QMessageBox.critical(self, "AI Error", f"Failed to get AI feedback:\n{str(e)}")
+                QMessageBox.critical(None, "AI Error", f"Failed to get AI feedback:\n{str(e)}")
                 continue 
 
             # split on the '---' lines to get each feedback piece
@@ -76,29 +76,29 @@ def generate_structured_feedback(self, df_encoded, question_indexes, idMap):
 
         return pd.DataFrame(rows)        
 
-def get_aggregate_grades(self):
-        # Filter out rows where feedback is too short
-        filtered_df = self.structured_df[self.structured_df['Feedback'].str.len() > 10]
+def get_aggregate_grades(structured_df, aggregate_prompt=None):
+    # Filter out rows where feedback is too short
+    filtered_df = structured_df[structured_df['Feedback'].str.len() > 10]
 
-        # Group by Question ID and store each group in a dictionary
-        question_dfs = {qid: group.reset_index(drop=True) for qid, group in filtered_df.groupby('Question ID')}
+    # Group by Question ID and store each group in a dictionary
+    question_dfs = {qid: group.reset_index(drop=True) for qid, group in filtered_df.groupby('Question ID')}
 
-        aggregate_feedback = [
-            "Aggregate Feedback: "
-        ]
+    aggregate_feedback = [
+        "Aggregate Feedback: "
+    ]
 
-        system_prompt = self.aggregate_prompt or AGGREGATE_PROMPT
-        
-        # Access each DataFrame by Question ID
-        for qid, qdf in question_dfs.items():
-            #generate user prompt based on grades and feedback
-            user_prompt = functions.format_aggregate_prompt(qid, qdf)
-            aggregate_feedback.append(f"\n{qid}\n")
+    from app.ai.default_settings import AGGREGATE_PROMPT
+    system_prompt = aggregate_prompt or AGGREGATE_PROMPT
+    
+    # Access each DataFrame by Question ID
+    for qid, qdf in question_dfs.items():
+        #generate user prompt based on grades and feedback
+        user_prompt = functions.format_aggregate_prompt(qid, qdf)
+        aggregate_feedback.append(f"\n{qid}\n")
 
-            #pass system and user prompt into AI
-            ai_response = get_ai_response_2(system_prompt, user_prompt)
-            aggregate_feedback.append(ai_response)
+        #pass system and user prompt into AI
+        ai_response = get_ai_response_2(system_prompt, user_prompt)
+        aggregate_feedback.append(ai_response)
 
-        aggregate_feedback = '\n'.join(aggregate_feedback)
-        return aggregate_feedback
+    return "\n".join(aggregate_feedback)
 
